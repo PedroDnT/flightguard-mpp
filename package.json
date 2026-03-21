@@ -1,0 +1,25 @@
+{
+  "name": "flightguard-mpp",
+  "version": "0.1.0",
+  "description": "Parametric flight delay insurance on Tempo using MPP micropayments",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mppx": "^0.4.5",
+    "hono": "^4.0.0",
+    "@hono/node-server": "^1.0.0",
+    "viem": "^2.0.0",
+    "dotenv": "^16.0.0",
+    "node-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
