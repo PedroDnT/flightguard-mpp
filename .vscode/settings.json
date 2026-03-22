@@ -1,3 +1,6 @@
 {
-    "robotcode.disableExtension": true
+    "robotcode.disableExtension": true,
+    "conventionalCommits.scopes": [
+        "was halucinating"
+    ]
 }

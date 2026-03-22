@@ -120,8 +120,8 @@ function normalizeFlightInfo(raw: AeroDataBoxFlight): FlightInfo {
       : undefined,
     actualTime: raw.arrival?.actualTime
       ? {
-          local: raw.arrival.scheduledTime?.local ?? '',
-          utc: raw.arrival.scheduledTime?.utc ?? '',
+          local: raw.arrival.actualTime.local ?? '',
+          utc: raw.arrival.actualTime.utc ?? '',
         }
       : undefined,
   }

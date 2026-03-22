@@ -13,14 +13,14 @@ module.exports = {
   },
   networks: {
     hardhat: {},
-    "scroll-sepolia": {
-      url: "https://sepolia-rpc.scroll.io",
-      chainId: 534351,
+    "tempo-testnet": {
+      url: "https://rpc.moderato.tempo.xyz",
+      chainId: 42431,
       accounts: [PRIVATE_KEY],
     },
-    scroll: {
-      url: "https://rpc.scroll.io",
-      chainId: 534352,
+    tempo: {
+      url: "https://rpc.tempo.xyz",
+      chainId: 4217,
       accounts: [PRIVATE_KEY],
     },
   },

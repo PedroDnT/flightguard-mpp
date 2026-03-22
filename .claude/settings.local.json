@@ -1,11 +1,12 @@
 {
   "permissions": {
-
-    "yolo": true,    
     "allow": [
       "Bash(wc -l /Users/pedrotodescan/Documents/Dev/flightguard-mpp/.planning/codebase/*.md)",
       "WebFetch(domain:tempo.xyz)",
-      "Bash(mkdir:*)"
-    ]
+      "Bash(mkdir:*)",
+      "Bash(claude mcp:*)",
+      "Bash(gh pr:*)"
+    ],
+    "yolo": true
   }
 }
