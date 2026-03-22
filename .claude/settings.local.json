@@ -5,7 +5,8 @@
       "WebFetch(domain:tempo.xyz)",
       "Bash(mkdir:*)",
       "Bash(claude mcp:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(git add:*)"
     ],
     "yolo": true
   }
