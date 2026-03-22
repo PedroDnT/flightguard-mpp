@@ -6,7 +6,8 @@
       "Bash(mkdir:*)",
       "Bash(claude mcp:*)",
       "Bash(gh pr:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "yolo": true
   }
