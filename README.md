@@ -58,7 +58,13 @@ cp .env.example .env
 ```
 
 ### 4. Fund the pool
-Get testnet pathUSD from the [Tempo faucet](https://docs.tempo.xyz/quickstart/faucet) and send to your `POOL_ADDRESS`.
+```bash
+npm run faucet          # funds POOL_ADDRESS from .env with 1M pathUSD (testnet only)
+```
+Requires [Foundry](https://getfoundry.sh). Or fund a specific address:
+```bash
+npm run faucet -- 0xYourAddress
+```
 
 ### 5. Start
 ```bash

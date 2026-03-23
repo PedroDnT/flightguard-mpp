@@ -72,6 +72,7 @@ Server starts on `http://localhost:3000` (or `PORT` from `.env`).
 | `test:contracts` | `hardhat test` | Run Hardhat contract tests |
 | `deploy:testnet` | `hardhat run scripts/deploy.js --network tempo-testnet` | Deploy to Tempo testnet |
 | `deploy:mainnet` | `hardhat run scripts/deploy.js --network tempo` | Deploy to Tempo mainnet |
+| `faucet` | `node scripts/faucet.js` | Fund address with testnet stablecoins via Tempo faucet |
 
 ---
 
@@ -129,6 +130,22 @@ npm run deploy:testnet
 # Deploy to mainnet
 npm run deploy:mainnet
 ```
+
+---
+
+## Faucet (Testnet Only)
+
+Fund any address with 1M each of pathUSD, AlphaUSD, BetaUSD, ThetaUSD:
+
+```bash
+# Fund POOL_ADDRESS from .env
+npm run faucet
+
+# Fund a specific address
+npm run faucet -- 0xYourAddress
+```
+
+Requires [Foundry](https://getfoundry.sh) (`cast` CLI). Only works on Tempo testnet (Moderato).
 
 ---
 

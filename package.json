@@ -11,7 +11,8 @@
     "compile": "hardhat compile",
     "test:contracts": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.js --network tempo-testnet",
-    "deploy:mainnet": "hardhat run scripts/deploy.js --network tempo"
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network tempo",
+    "faucet": "node scripts/faucet.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
