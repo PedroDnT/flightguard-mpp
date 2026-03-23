@@ -1,180 +1,76 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-21
+## AeroDataBox (Flight Data API)
 
-## APIs & External Services
+- **Provider**: RapidAPI marketplace — `aerodatabox.p.rapidapi.com`
+- **Auth**: `X-RapidAPI-Key` header (from `RAPIDAPI_KEY` env var)
+- **Endpoint used**: `GET /flights/number/{flightNumber}/{date}`
+- **Implementation**: `src/flight.ts` → `fetchFlightInfo()`
+- **Called from**: `src/server.ts` (policy creation), `src/checker.ts` (polling loop)
+- **Response handling**: Returns `FlightInfo | null`; 404 → null; non-200 → throws
+- **Rate limits**: Free tier has request limits — monitor RapidAPI dashboard
 
-**Flight Data:**
-- AeroDataBox (via RapidAPI)
-  - What it's used for: Real-time flight status, delay information, departure/arrival times
-  - SDK/Client: HTTP fetch (built-in)
-  - Auth: `RAPIDAPI_KEY` environment variable (RapidAPI authentication key)
-  - Base URL: `https://aerodatabox.p.rapidapi.com`
-  - Endpoint: `/flights/number/{flightNumber}/{date}`
-  - Headers required:
-    - `X-RapidAPI-Key` - Set to RAPIDAPI_KEY
-    - `X-RapidAPI-Host` - `aerodatabox.p.rapidapi.com`
-  - Response shape: `FlightInfo` interface in `src/types.ts`
-    - Flight number, status (Scheduled/Departed/EnRoute/Landed/Arrived/Cancelled/Diverted)
-    - Departure/arrival airport info (IATA, name, scheduled/actual times)
-    - Delay information (minutes, reason)
-  - Error handling: 404 returns null (flight not found), non-200 throws error
-  - Implementation: `src/flight.ts` - `fetchFlightInfo()`
-
-## Data Storage
-
-**Databases:**
-- In-Memory Map (no external database)
-  - Type: JavaScript Map stored in application memory
-  - Client: Custom `PolicyStore` class in `src/store.ts`
-  - Persistence: None - policies lost on server restart
-  - Use case: Store active insurance policies during runtime
-
-**File Storage:**
-- None
-
-**Caching:**
-- None
-
-## Blockchain & Web3
-
-**Network:**
-- Tempo blockchain
-  - Mainnet:
-    - Chain ID: 4217
-    - RPC URL: `https://rpc.tempo.xyz`
-    - Explorer: `https://explore.tempo.xyz`
-  - Testnet (Moderato):
-    - Chain ID: 42431
-    - RPC URL: `https://rpc.moderato.tempo.xyz` (default)
-    - Explorer: `https://explore.testnet.tempo.xyz`
-  - Configuration: `TEMPO_RPC_URL` and `CHAIN_ID` env vars
-
-**Smart Contracts:**
-- pathUSD Token (TIP-20 / ERC-20 compatible)
-  - Address (testnet): `0x20c0000000000000000000000000000000000000` (default, configurable via `PATHUSD_ADDRESS`)
-  - Functions used:
-    - `balanceOf(address)` - Check pool wallet balance (read)
-    - `transfer(to, amount)` - Send payouts to policyholders (write)
-  - Decimals: 6 (like USDC)
-  - Used for: Premium payments and payout disbursements
-
-**Wallet & Signing:**
-- Pool Wallet (controlled by insurer)
-  - Private key: `POOL_PRIVATE_KEY` env var (hex format)
-  - Address: `POOL_ADDRESS` env var
-  - Purpose: Signs payout transactions on Tempo
-  - Used by: `PayoutEngine` in `src/payout.ts` via viem
-
-**Interaction Library:**
-- viem 2.0+
-  - Client types: `WalletClient` (for signing), `PublicClient` (for reading)
-  - Transport: HTTP to Tempo RPC endpoint
-  - Implementation: `src/payout.ts` - `PayoutEngine` class
-
-## Micropayment Protocol
-
-**MPP (Micropayment Protocol):**
-- Provider: mppx 0.4.5
-- Used for: Gating the POST /insure endpoint with pathUSD payment requirement
-- Payment flow:
-  1. Client initiates POST /insure without payment
-  2. Server responds with HTTP 402 challenge (MPP payment request)
-  3. Client signs and submits payment transaction
-  4. Server validates payment receipt via MPP
-  5. On success, policy is created and returned with receipt
-- Configuration: `src/server.ts` - Mppx initialized with:
-  - Method: Tempo payments
-  - Currency: pathUSD token address
-  - Recipient: Pool address (insurer)
-  - Amount: `config.premiumAmount` (e.g., "1.00" pathUSD)
-
-## Authentication & Identity
-
-**Auth Provider:**
-- None centralized (blockchain-native)
-
-**Authentication Approach:**
-- Blockchain wallet signature via MPP for payments
-- No user authentication required - API is public
-- Authorization gated by micropayment requirement
-
-## Monitoring & Observability
-
-**Error Tracking:**
-- None (built-in logging only)
-
-**Logs:**
-- Console logging with prefixes: `[SERVER]`, `[FLIGHT]`, `[PAYOUT]`, `[CHECKER]`, `[STORE]`
-- No external log aggregation
-- Logged events:
-  - Policy creation/updates
-  - Flight data fetches and errors
-  - Payout transactions (submitted, confirmed, failed)
-  - Checker cycle progress and actions
-  - Server startup and health checks
-
-**Health Monitoring:**
-- GET /health endpoint returns:
-  - Pool wallet address and pathUSD balance
-  - Policy counts by status (active, paid_out, expired, cancelled)
-  - Network and chain configuration
-  - Insurance parameters (premium, multiplier, delay threshold)
-
-## CI/CD & Deployment
-
-**Hosting:**
-- Self-hosted (provided application runs on Node.js)
-- Expected deployment: Cloud VM, container, or local server
-
-**CI Pipeline:**
-- None configured (no GitHub Actions or similar in codebase)
-
-## Environment Configuration
-
-**Required env vars at startup:**
-- `POOL_PRIVATE_KEY` - Pool wallet signing key
-- `POOL_ADDRESS` - Pool wallet address
-- `RAPIDAPI_KEY` - AeroDataBox API key
-
-**Critical env vars with safe defaults:**
-- `TEMPO_RPC_URL` - Defaults to testnet
-- `CHAIN_ID` - Defaults to testnet (42431)
-- `PATHUSD_ADDRESS` - Defaults to testnet token address
-
-**Secrets location:**
-- `.env` file (not committed, listed in `.gitignore`)
-- Environment variables passed at runtime
-- Private key must be protected - not logged or exposed
-
-## Webhooks & Callbacks
-
-**Incoming:**
-- None - API is polling-based, not event-driven
-
-**Outgoing:**
-- None - No external webhooks triggered by app
-
-## Data Flow Summary
-
-1. **Insurance Purchase:**
-   - Client calls POST /insure with flight details + MPP payment
-   - AeroDataBox validates flight exists
-   - Policy stored in memory with premium paid
-   - Payout amount calculated from config
-
-2. **Flight Monitoring:**
-   - FlightChecker runs on interval (`CHECK_INTERVAL_MS`)
-   - Polls AeroDataBox for each active policy
-   - Records flight status and delay
-
-3. **Payout Trigger:**
-   - When delay exceeds threshold and flight has departed:
-   - PayoutEngine signs payout transaction via viem
-   - Sends pathUSD transfer from pool to policyholder
-   - Records tx hash in policy
-   - Policy marked as "paid_out"
+### Data extracted
+- Flight status: `Scheduled`, `Departed`, `EnRoute`, `Landed`, `Arrived`, `Cancelled`, `Diverted`
+- Departure delay minutes (`departure.delays[0].minutes`)
+- Scheduled departure UTC (stored at policy creation)
+- Actual departure times
 
 ---
 
-*Integration audit: 2026-03-21*
+## Tempo Network (Blockchain)
+
+- **Network**: Tempo (EVM-compatible)
+- **Testnet**: Chain ID `42431`, RPC `https://rpc.moderato.tempo.xyz`, explorer `https://explore.testnet.tempo.xyz`
+- **Mainnet**: Chain ID `4217`, RPC `https://rpc.tempo.xyz`, explorer `https://explore.tempo.xyz`
+- **Auth**: Pool wallet private key (`POOL_PRIVATE_KEY` env var)
+- **Implementation**: `src/payout.ts` → `PayoutEngine`
+- **Library**: viem (`createWalletClient`, `createPublicClient`)
+
+### Operations
+- `balanceOf(poolAddress)` — check pool balance before payout
+- `transfer(toAddress, amount)` — ERC-20 pathUSD transfer to policyholder
+- `waitForTransactionReceipt` — 30s timeout; Tempo has sub-second finality
+
+---
+
+## pathUSD (Stablecoin)
+
+- **Type**: ERC-20 / TIP-20 stablecoin on Tempo
+- **Decimals**: 6 (same as USDC)
+- **Testnet address**: `0x20c0000000000000000000000000000000000000`
+- **Mainnet address**: configured via `PATHUSD_ADDRESS` env var
+- **ABI used**: minimal — only `transfer` and `balanceOf` (`src/payout.ts`)
+
+---
+
+## mppx (Micropayment Protocol)
+
+- **Package**: `mppx@^0.4.5`
+- **Role**: Payment gating on `POST /insure` — customer pays premium before policy is issued
+- **Flow**:
+  1. `Mppx.create()` with `tempo()` adapter pointing `recipient` at `POOL_ADDRESS`
+  2. `mppx.charge({ amount: premiumAmount })` — returns 402 challenge if unpaid
+  3. On paid request: `r.withReceipt(c.json(response))` attaches payment receipt to response
+- **Implementation**: `src/server.ts`
+
+---
+
+## FlightGuard Smart Contract (auxiliary on-chain registry)
+
+- **File**: `contracts/FlightGuard.sol`
+- **Purpose**: On-chain policy registry + USDC pool management
+- **Note**: The current server (`src/payout.ts`) sends pathUSD via direct ERC-20 transfer — the smart contract is an **auxiliary layer** available for deployment but not used in the live server flow
+- **Functions**: `registerPolicy()`, `triggerPayout()`, `expirePolicy()`, `fund()`, `withdraw()`
+- **Access control**: `Ownable` — only contract owner (deployer) can call protected functions
+- **Events**: `PolicyRegistered`, `PayoutTriggered`, `PolicyExpired`, `PoolFunded`, `PoolWithdrawn`
+
+---
+
+## No External Integrations
+
+- **Database**: none — in-memory `Map` only
+- **Auth provider**: none — access gated by MPP payment
+- **CI/CD**: none configured
+- **Monitoring**: console logging only (`[SERVER]`, `[CHECKER]`, `[PAYOUT]`, `[FLIGHT]`, `[STORE]` prefixes)
+- **Webhooks**: none

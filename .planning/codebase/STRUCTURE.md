@@ -1,116 +1,74 @@
-# Structure — FlightGuard MPP
+# Directory Structure
 
-## Directory Layout
+## Root Layout
 
 ```
 flightguard-mpp/
-├── src/                        # Application source code
-│   ├── types.ts                # Shared types, interfaces, constants
-│   ├── server.ts               # Fastify HTTP server + route definitions
-│   ├── store.ts                # In-memory policy store (Map<id, Policy>)
-│   ├── flight.ts               # AeroDataBox API client + response parser
-│   ├── checker.ts              # Background polling loop for flight delays
-│   └── payout.ts               # Tempo blockchain payout execution (viem)
-├── index.ts                    # Entry point — wires server + starts checker
-├── .env.example                # Environment variable template
-├── .envrc                      # direnv config (auto-loads .env)
-├── package.json                # Node.js manifest + scripts
-├── tsconfig.json               # TypeScript compiler config
-├── README.md                   # Project documentation
+├── index.ts                  ← Entry point (config load, server + checker boot)
+├── package.json              ← Scripts and dependencies
+├── tsconfig.json             ← TypeScript config (strict, ES2022, ESNext modules, bundler)
+├── hardhat.config.js         ← Hardhat: Solidity compiler + network configs
+├── .env.example              ← Environment variable template (11 vars)
 │
-├── .claude/                    # Claude Code agent definitions
-│   └── .agents/
-│       ├── AGENTS.md           # Master agent coordination doc
-│       ├── AGENTS_5_6_7_8.md   # Phase 5-8 agent specs
-│       ├── AGENT_1_SETUP.md    # Setup agent spec
-│       ├── AGENT_2_TYPES.md    # Types agent spec
-│       ├── AGENT_3_FLIGHT.md   # Flight agent spec
-│       └── AGENT_4_PAYOUT.md   # Payout agent spec
+├── src/                      ← Application source (TypeScript)
+│   ├── server.ts             ← Hono HTTP server (routes + MPP gating)
+│   ├── checker.ts            ← Flight polling loop (setInterval cron)
+│   ├── flight.ts             ← AeroDataBox API wrapper + normalizer
+│   ├── payout.ts             ← Tempo/viem payout engine
+│   ├── store.ts              ← In-memory policy store (singleton)
+│   └── types.ts              ← Shared types, interfaces, constants
 │
-├── .github/                    # GitHub/Copilot chat mode configs
-│   ├── architect.chatmode.md
-│   ├── ask.chatmode.md
-│   ├── code.chatmode.md
-│   └── debug.chatmode.md
+├── contracts/                ← Solidity smart contracts
+│   ├── FlightGuard.sol       ← Main contract (policy registry + USDC pool)
+│   └── MockERC20.sol         ← ERC-20 mock for Hardhat tests
 │
-├── memory-bank/                # Roo/Cursor memory bank docs
-│   ├── activeContext.md        # Current work context
-│   ├── architect.md            # Architecture decisions
-│   ├── decisionLog.md          # Decision history
-│   ├── productContext.md       # Product goals
-│   ├── progress.md             # Implementation progress
-│   ├── projectBrief.md         # Project brief
-│   └── systemPatterns.md       # System patterns
+├── test/                     ← Hardhat contract tests (JavaScript/Chai)
+│   └── FlightGuard.test.js   ← Full contract test suite
 │
-└── .planning/                  # GSD planning artifacts
-    └── codebase/               # This codebase map
+├── scripts/                  ← Deployment scripts
+│   └── deploy.js             ← Deploy FlightGuard to testnet/mainnet
+│
+├── memory-bank/              ← Development notes (Roo/Cursor memory bank)
+├── dist/                     ← TypeScript compiled output (gitignored)
+└── .planning/                ← GSD planning artifacts
+    └── codebase/             ← Codebase map documents (this folder)
 ```
 
-## Key Files
+---
 
-| File | Role |
-|------|------|
-| `index.ts` | Entry point: loads config, starts Fastify, launches checker loop |
-| `src/types.ts` | Single source of truth for all types, interfaces, and constants |
-| `src/server.ts` | HTTP API: `POST /insure`, `GET /policy/:id`, `GET /health` |
-| `src/store.ts` | PolicyStore class — in-memory Map with CRUD methods |
-| `src/flight.ts` | `fetchFlightInfo()` — calls AeroDataBox, normalizes response |
-| `src/checker.ts` | `startChecker()` — polling loop, evaluates delays, triggers payouts |
-| `src/payout.ts` | `sendPayout()` — viem wallet client, ERC-20 transfer on Tempo chain |
-| `.env.example` | Documents all required environment variables |
+## Source File Responsibilities
+
+| File | Responsibility | Key exports |
+|---|---|---|
+| `index.ts` | Bootstrap: load config, start server + checker, shutdown handlers | — |
+| `src/server.ts` | HTTP routes, MPP gating, request validation | `buildServer(config)` |
+| `src/checker.ts` | Periodic flight checks, payout triggers | `FlightChecker` class |
+| `src/flight.ts` | AeroDataBox API client, response normalization | `fetchFlightInfo()`, `getDepartureDelayMinutes()`, `hasFlightDeparted()`, `isFlightTerminal()`, `getScheduledDepartureUtc()` |
+| `src/payout.ts` | Tempo ERC-20 transfer, balance checks | `PayoutEngine` class, `buildPayoutMemo()`, `buildTempoChain()` |
+| `src/store.ts` | In-memory `Map`-based policy store | `store` singleton (`PolicyStore`) |
+| `src/types.ts` | All shared interfaces, types, constants | `AppConfig`, `Policy`, `FlightInfo`, `PolicyStatus`, `FlightStatus`, `PATHUSD_DECIMALS`, `AERODATABOX_BASE_URL`, `TEMPO_TESTNET`, `TEMPO_MAINNET` |
+
+---
 
 ## Naming Conventions
 
-### Files
-- **Lowercase kebab-case** — not used here (all files are single-word camelCase: `server.ts`, `checker.ts`)
-- **Single responsibility** — each file maps 1:1 to a domain concept
+- **Files**: camelCase single-word (`server.ts`, `checker.ts`, `payout.ts`)
+- **Classes**: PascalCase (`FlightChecker`, `PayoutEngine`, `PolicyStore`)
+- **Interfaces**: PascalCase (`AppConfig`, `Policy`, `FlightInfo`, `PayoutRequest`)
+- **Type unions**: PascalCase (`PolicyStatus`, `FlightStatus`)
+- **Constants**: SCREAMING_SNAKE_CASE (`PATHUSD_DECIMALS`, `AERODATABOX_BASE_URL`, `TEMPO_TESTNET`)
+- **Functions**: camelCase, verb-first (`fetchFlightInfo`, `buildServer`, `buildPayoutMemo`, `buildTempoChain`)
+- **Log prefixes**: `[MODULE]` uppercase bracket prefix (`[SERVER]`, `[CHECKER]`, `[PAYOUT]`, `[FLIGHT]`, `[STORE]`)
 
-### Types & Interfaces
-- **PascalCase** for interfaces: `Policy`, `FlightInfo`, `AppConfig`, `PayoutRequest`
-- **PascalCase** for type aliases: `PolicyStatus`, `FlightStatus`
-- Defined centrally in `src/types.ts`, imported where needed
+---
 
-### Functions
-- **camelCase**: `fetchFlightInfo`, `startChecker`, `sendPayout`, `loadConfig`
-- Verb-first naming pattern: `fetch*`, `start*`, `send*`, `load*`, `get*`
+## Where to Add New Code
 
-### Variables / Constants
-- **camelCase** for variables: `policyStore`, `checkResult`
-- **SCREAMING_SNAKE_CASE** for module-level constants: `PATHUSD_DECIMALS`, `AERODATABOX_BASE_URL`, `TEMPO_TESTNET`
-
-### Environment Variables
-- **SCREAMING_SNAKE_CASE**: `POOL_PRIVATE_KEY`, `TEMPO_RPC_URL`, `RAPID_API_KEY`
-- Documented in `.env.example`
-
-## Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `tsconfig.json` | TypeScript strict mode, ESNext target, bundler module resolution |
-| `package.json` | `type: "module"` (ESM), scripts: `dev` (tsx watch), `build` (tsc) |
-| `.env.example` | Template for all required env vars |
-| `.envrc` | direnv: auto-sources `.env` when entering directory |
-
-## Module Import Patterns
-
-```typescript
-// Types always imported from central types.ts
-import type { Policy, AppConfig, FlightInfo } from './types.js'
-
-// Config injected from index.ts → passed as parameter
-// No global config singleton — config flows down as function argument
-
-// Store passed by reference through function calls
-// (checker, server both receive the same PolicyStore instance)
-```
-
-## Entry Point Flow
-
-```
-index.ts
-  └── loadConfig()           → AppConfig from env vars
-  └── new PolicyStore()      → in-memory store
-  └── buildServer(config, store)  → Fastify instance with routes
-  └── server.listen()        → HTTP server on configured port
-  └── startChecker(config, store) → setInterval polling loop
-```
+| Task | Location |
+|---|---|
+| New HTTP route | `src/server.ts` — add `app.get/post()` inside `buildServer()` |
+| New flight data field | `src/types.ts` (add to `FlightInfo`), `src/flight.ts` (add to `normalizeFlightInfo()`) |
+| New payout method | `src/payout.ts` — extend `PayoutEngine` class |
+| New policy state | `src/types.ts` (`PolicyStatus` union), `src/store.ts` (new mutation method) |
+| New config variable | `src/types.ts` (`AppConfig` interface), `index.ts` (`loadConfig()`), `.env.example` |
+| New smart contract | `contracts/` + test in `test/` + update `scripts/deploy.js` |
