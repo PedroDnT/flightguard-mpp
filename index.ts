@@ -62,7 +62,6 @@ serve({ fetch: app.fetch, port: config.port }, () => {
   console.log(`   POST /insure       — buy a policy (MPP-gated)`)
   console.log(`   GET  /policy/:id   — check policy status`)
   console.log(`   GET  /health       — pool balance & stats`)
-  console.log(`   GET  /policies     — all policies (debug)`)
   console.log('')
 })
 

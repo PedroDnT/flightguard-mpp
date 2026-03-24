@@ -154,6 +154,11 @@ export class FlightChecker {
         `[CHECKER]   → Delay ${delayMinutes}min ≥ threshold ${this.config.delayThresholdMin}min — TRIGGERING PAYOUT`,
       )
 
+      // Pre-lock to prevent double-payout from concurrent checker cycles.
+      // Any concurrent checkPolicy() call will hit the status !== 'active'
+      // guard at the top of this function and return null before reaching here.
+      store.update(policyId, { status: 'paid_out' })
+
       const memo = buildPayoutMemo(policyId, policy.flightNumber, policy.date)
       const payoutResult = await this.payoutEngine.sendPayout({
         toAddress: policy.payoutAddress,
@@ -173,8 +178,9 @@ export class FlightChecker {
           payoutTxHash: payoutResult.txHash,
         }
       } else {
+        // Rollback so the next cycle can retry
+        store.update(policyId, { status: 'active' })
         console.error(`[CHECKER]   ❌ PAYOUT FAILED: ${payoutResult.error}`)
-        // Keep active so we retry next cycle
         return {
           policyId,
           flightNumber: policy.flightNumber,

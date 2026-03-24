@@ -7,6 +7,7 @@
 // ============================================================
 
 import { Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { Mppx, tempo } from 'mppx/server'
 import { store } from './store.js'
 import { fetchFlightInfo, getScheduledDepartureUtc } from './flight.js'
@@ -31,7 +32,7 @@ export function buildServer(config: AppConfig): Hono {
   // POST /insure  — Buy a flight delay insurance policy
   // Cost: config.premiumAmount pathUSD via MPP
   // ----------------------------------------------------------------
-  app.post('/insure', async (c) => {
+  app.post('/insure', bodyLimit({ maxSize: 1024 }), async (c) => {
     console.log(`[SERVER] POST /insure`)
 
     // Gate with MPP payment
@@ -58,8 +59,24 @@ export function buildServer(config: AppConfig): Hono {
         400,
       )
     }
+    if (!/^[A-Z0-9]{2,8}$/i.test(flightNumber)) {
+      return c.json({ error: 'Invalid flight number format (e.g. LA3251)' }, 400)
+    }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return c.json({ error: 'date must be YYYY-MM-DD' }, 400)
+    }
+    const parsedDate = new Date(date + 'T00:00:00Z')
+    if (
+      isNaN(parsedDate.getTime()) ||
+      parsedDate.getUTCMonth() + 1 !== parseInt(date.slice(5, 7), 10) ||
+      parsedDate.getUTCDate() !== parseInt(date.slice(8, 10), 10)
+    ) {
+      return c.json({ error: 'date is not a valid calendar date' }, 400)
+    }
+    const todayUtc = new Date()
+    todayUtc.setUTCHours(0, 0, 0, 0)
+    if (parsedDate < todayUtc) {
+      return c.json({ error: 'date must not be in the past' }, 400)
     }
     if (!/^0x[0-9a-fA-F]{40}$/.test(payoutAddress)) {
       return c.json({ error: 'payoutAddress must be a valid EVM address' }, 400)
@@ -74,7 +91,7 @@ export function buildServer(config: AppConfig): Hono {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error(`[SERVER] Flight lookup failed: ${msg}`)
-      return c.json({ error: `Flight data unavailable: ${msg}` }, 503)
+      return c.json({ error: 'Flight data unavailable' }, 503)
     }
 
     if (!flightInfo) {
@@ -85,9 +102,8 @@ export function buildServer(config: AppConfig): Hono {
     }
 
     const scheduledDeparture = getScheduledDepartureUtc(flightInfo)
-    const payoutAmount = (
-      parseFloat(config.premiumAmount) * config.payoutMultiplier
-    ).toFixed(2)
+    const premiumCents = BigInt(Math.round(parseFloat(config.premiumAmount) * 100))
+    const payoutAmount = (Number(premiumCents * BigInt(config.payoutMultiplier)) / 100).toFixed(2)
 
     // Create policy
     const policy = store.create({
@@ -155,13 +171,6 @@ export function buildServer(config: AppConfig): Hono {
         delayThresholdMin: config.delayThresholdMin,
       },
     })
-  })
-
-  // ----------------------------------------------------------------
-  // GET /policies  — List all policies (debug)
-  // ----------------------------------------------------------------
-  app.get('/policies', (c) => {
-    return c.json({ policies: store.getAll() })
   })
 
   return app
