@@ -1,5 +1,7 @@
 # Technology Stack
 
+*Last updated: 2026-03-23*
+
 ## Language & Runtime
 
 | Layer | Technology |
@@ -15,7 +17,9 @@
 **Hono** (`hono@^4`, `@hono/node-server@^1`)
 - Lightweight web framework; Hono app served via `@hono/node-server`
 - Entry: `index.ts` → `buildServer()` in `src/server.ts`
-- Routes: `POST /insure`, `GET /policy/:id`, `GET /health`, `GET /policies`
+- Routes: `POST /insure`, `GET /policy/:id`, `GET /health`
+- Middleware: `bodyLimit(1KB)` on `POST /insure`
+- Rate limiting: module-level in-memory IP map (10 req/60s, no external dep)
 
 ## Micropayment Protocol
 
@@ -47,14 +51,31 @@
 **AeroDataBox** via RapidAPI
 - Base URL: `https://aerodatabox.p.rapidapi.com`
 - Auth: `X-RapidAPI-Key` header
-- Used in `src/flight.ts`
+- 4-minute in-memory cache (`flightCache`) in `src/flight.ts` — reduces quota usage
+
+## Persistence
+
+**Node.js `fs` module** (no external database)
+- `policies.json` — JSON file with `[id, Policy][]` entries
+- Loaded synchronously on `PolicyStore` construction
+- Written synchronously on every mutation (`create`, `update`, `cleanup`)
+- Path configurable via `STORE_PATH` env var (default: `policies.json`)
+- Gitignored; survives server restarts
+
+## Testing
+
+**vitest** (`vitest@^4.1.1`)
+- Unit tests for `src/flight.ts` and `src/store.ts`
+- Config: `vitest.config.ts` (`include: ['test/**/*.test.ts']`)
+- 28 tests, ~200ms run time
+- `PolicyStore` accepts `storePath` constructor arg for test isolation (no disk I/O)
 
 ## Configuration
 
 **dotenv** (`dotenv@^16`) loaded at startup in `index.ts`
 - All config centralized in `AppConfig` interface (`src/types.ts`)
 - Required vars: `POOL_PRIVATE_KEY`, `POOL_ADDRESS`, `RAPIDAPI_KEY`
-- Optional with defaults: `TEMPO_RPC_URL`, `CHAIN_ID`, `PATHUSD_ADDRESS`, `PORT`, `PREMIUM_AMOUNT`, `PAYOUT_MULTIPLIER`, `DELAY_THRESHOLD_MIN`, `CHECK_INTERVAL_MS`
+- Optional with defaults: `TEMPO_RPC_URL`, `CHAIN_ID`, `PATHUSD_ADDRESS`, `PORT`, `PREMIUM_AMOUNT`, `PAYOUT_MULTIPLIER`, `DELAY_THRESHOLD_MIN`, `CHECK_INTERVAL_MS`, `STORE_PATH`
 
 ## Key Files
 
@@ -62,6 +83,8 @@
 |---|---|
 | `package.json` | Scripts, dependencies |
 | `tsconfig.json` | TypeScript config (strict, ES2022 target, ESNext modules, bundler resolution) |
+| `vitest.config.ts` | Unit test config |
 | `hardhat.config.js` | Hardhat networks (hardhat local, tempo-testnet, tempo mainnet) |
-| `.env.example` | Environment variable template (11 vars documented) |
+| `.env.example` | Environment variable template (12 vars documented) |
 | `index.ts` | Entry point — config load, server start, checker start, graceful shutdown |
+| `policies.json` | Runtime policy store (gitignored, created on first run) |
