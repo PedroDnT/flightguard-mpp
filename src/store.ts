@@ -3,10 +3,40 @@
 // ============================================================
 
 import { randomUUID } from 'crypto'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 import type { Policy, PolicyStatus, InsureRequest } from './types.js'
 
-class PolicyStore {
-  private policies: Map<string, Policy> = new Map()
+const DEFAULT_STORE_PATH = process.env.STORE_PATH ?? 'policies.json'
+
+function loadFromDisk(storePath: string): Map<string, Policy> {
+  try {
+    if (!existsSync(storePath)) return new Map()
+    const raw = readFileSync(storePath, 'utf-8')
+    const entries = JSON.parse(raw) as [string, Policy][]
+    console.log(`[STORE] Loaded ${entries.length} policy(ies) from ${storePath}`)
+    return new Map(entries)
+  } catch (err) {
+    console.error(`[STORE] Failed to load from disk: ${err}. Starting fresh.`)
+    return new Map()
+  }
+}
+
+function saveToDisk(storePath: string, policies: Map<string, Policy>): void {
+  try {
+    writeFileSync(storePath, JSON.stringify(Array.from(policies.entries()), null, 2))
+  } catch (err) {
+    console.error(`[STORE] Failed to save to disk: ${err}`)
+  }
+}
+
+export class PolicyStore {
+  private policies: Map<string, Policy>
+  private storePath: string
+
+  constructor(storePath?: string) {
+    this.storePath = storePath ?? DEFAULT_STORE_PATH
+    this.policies = loadFromDisk(this.storePath)
+  }
 
   /**
    * Create a new active policy after premium payment is confirmed.
@@ -34,6 +64,7 @@ class PolicyStore {
     }
 
     this.policies.set(id, policy)
+    saveToDisk(this.storePath, this.policies)
 
     console.log(`[STORE] Policy created: ${id}`)
     console.log(`[STORE]   Flight: ${policy.flightNumber} on ${policy.date}`)
@@ -86,6 +117,7 @@ class PolicyStore {
     }
 
     this.policies.set(id, updated)
+    saveToDisk(this.storePath, this.policies)
     console.log(`[STORE] Policy ${id} updated → status: ${updated.status}`)
 
     return updated
@@ -113,6 +145,27 @@ class PolicyStore {
       lastCheckedAt: Date.now(),
       lastFlightStatus: flightStatus,
     })
+  }
+
+  /**
+   * Remove terminal policies older than maxAgeMs.
+   * Call periodically to prevent unbounded store growth.
+   */
+  cleanup(maxAgeMs: number): number {
+    const cutoff = Date.now() - maxAgeMs
+    const terminal: PolicyStatus[] = ['paid_out', 'expired', 'cancelled']
+    let removed = 0
+    for (const [id, policy] of this.policies) {
+      if (terminal.includes(policy.status) && policy.updatedAt < cutoff) {
+        this.policies.delete(id)
+        removed++
+      }
+    }
+    if (removed > 0) {
+      console.log(`[STORE] Cleaned up ${removed} terminal policy(ies) older than ${maxAgeMs / 86400000}d`)
+      saveToDisk(this.storePath, this.policies)
+    }
+    return removed
   }
 
   /**

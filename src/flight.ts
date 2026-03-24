@@ -8,6 +8,20 @@ import {
   type FlightStatus,
 } from './types.js'
 
+// In-memory cache for AeroDataBox responses (4min TTL)
+const FLIGHT_CACHE_TTL_MS = 4 * 60 * 1000
+const flightCache = new Map<string, { data: FlightInfo | null; fetchedAt: number }>()
+
+function getCached(key: string): FlightInfo | null | undefined {
+  const entry = flightCache.get(key)
+  if (!entry) return undefined
+  if (Date.now() - entry.fetchedAt > FLIGHT_CACHE_TTL_MS) {
+    flightCache.delete(key)
+    return undefined
+  }
+  return entry.data
+}
+
 // ------------------------------------------------------------
 // INTERNAL: raw AeroDataBox response shape (partial)
 // ------------------------------------------------------------
@@ -44,6 +58,14 @@ export async function fetchFlightInfo(
   date: string,  // "YYYY-MM-DD"
   rapidApiKey: string,
 ): Promise<FlightInfo | null> {
+  const cacheKey = `${flightNumber}:${date}`
+
+  const cached = getCached(cacheKey)
+  if (cached !== undefined) {
+    console.log(`[FLIGHT] Cache hit for ${flightNumber} on ${date}`)
+    return cached
+  }
+
   const url = `${AERODATABOX_BASE_URL}/flights/number/${encodeURIComponent(flightNumber)}/${date}`
 
   console.log(`[FLIGHT] Fetching flight ${flightNumber} on ${date}`)
@@ -58,6 +80,7 @@ export async function fetchFlightInfo(
 
   if (response.status === 404) {
     console.log(`[FLIGHT] Flight ${flightNumber} not found (404)`)
+    flightCache.set(cacheKey, { data: null, fetchedAt: Date.now() })
     return null
   }
 
@@ -72,12 +95,14 @@ export async function fetchFlightInfo(
 
   if (!Array.isArray(data) || data.length === 0) {
     console.log(`[FLIGHT] No data returned for ${flightNumber} on ${date}`)
+    flightCache.set(cacheKey, { data: null, fetchedAt: Date.now() })
     return null
   }
 
   // AeroDataBox returns an array; use the first match
-  const raw = data[0]
-  return normalizeFlightInfo(raw)
+  const result = normalizeFlightInfo(data[0])
+  flightCache.set(cacheKey, { data: result, fetchedAt: Date.now() })
+  return result
 }
 
 // ------------------------------------------------------------
@@ -118,6 +143,7 @@ function normalizeFlightInfo(raw: AeroDataBoxFlight): FlightInfo {
           utc: raw.arrival.scheduledTime.utc ?? '',
         }
       : undefined,
+    // verified: reads actualTime, not scheduledTime
     actualTime: raw.arrival?.actualTime
       ? {
           local: raw.arrival.actualTime.local ?? '',

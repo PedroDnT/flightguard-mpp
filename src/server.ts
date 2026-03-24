@@ -14,6 +14,23 @@ import { fetchFlightInfo, getScheduledDepartureUtc } from './flight.js'
 import { PayoutEngine } from './payout.js'
 import type { AppConfig, InsureRequest, InsureResponse, PolicyResponse } from './types.js'
 
+// Simple in-memory rate limiter: 10 req / 60s per IP
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>()
+const RATE_LIMIT_MAX = 10
+const RATE_LIMIT_WINDOW_MS = 60_000
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now })
+    return true
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false
+  entry.count++
+  return true
+}
+
 export function buildServer(config: AppConfig): Hono {
   const app = new Hono()
   const payoutEngine = new PayoutEngine(config)
@@ -40,6 +57,12 @@ export function buildServer(config: AppConfig): Hono {
     if (r.status === 402) {
       console.log(`[SERVER] 402 — awaiting payment`)
       return r.challenge
+    }
+
+    // Rate limit
+    const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown'
+    if (!checkRateLimit(ip)) {
+      return c.json({ error: 'Too many requests' }, 429)
     }
 
     // Parse body

@@ -12,7 +12,9 @@
     "test:contracts": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.js --network tempo-testnet",
     "deploy:mainnet": "hardhat run scripts/deploy.js --network tempo",
-    "faucet": "node scripts/faucet.js"
+    "faucet": "node scripts/faucet.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
@@ -28,6 +30,7 @@
     "@types/node": "^20.0.0",
     "hardhat": "^2.28.6",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.1"
   }
 }

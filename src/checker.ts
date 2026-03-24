@@ -62,6 +62,9 @@ export class FlightChecker {
    * Run one full check cycle over all active policies.
    */
   private async runCycle(): Promise<void> {
+    // Clean up terminal policies older than 7 days
+    store.cleanup(7 * 24 * 60 * 60 * 1000)
+
     const active = store.getActive()
 
     if (active.length === 0) {
@@ -75,13 +78,14 @@ export class FlightChecker {
 
     const results: CheckResult[] = []
 
-    for (const policy of active) {
-      try {
-        const result = await this.checkPolicy(policy.id)
-        if (result) results.push(result)
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err)
-        console.error(`[CHECKER] Error checking policy ${policy.id}: ${msg}`)
+    const settled = await Promise.allSettled(
+      active.map((policy) => this.checkPolicy(policy.id))
+    )
+    for (const outcome of settled) {
+      if (outcome.status === 'fulfilled' && outcome.value) {
+        results.push(outcome.value)
+      } else if (outcome.status === 'rejected') {
+        console.error(`[CHECKER] Error checking policy: ${outcome.reason}`)
       }
     }
 
