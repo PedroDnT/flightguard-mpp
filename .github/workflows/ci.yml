@@ -31,6 +31,7 @@ jobs:
           POOL_PRIVATE_KEY: ${{ secrets.POOL_PRIVATE_KEY }}
           POOL_ADDRESS: ${{ secrets.POOL_ADDRESS }}
         run: |
+          set -euo pipefail
           if [ -n "$POOL_PRIVATE_KEY" ] && [ -n "$POOL_ADDRESS" ]; then
             echo "Using existing pool wallet from secrets."
             echo "POOL_PRIVATE_KEY=$POOL_PRIVATE_KEY" >> "$GITHUB_ENV"
@@ -49,7 +50,10 @@ jobs:
 
             echo "Generated address: $NEW_ADDRESS"
             echo "Funding via Tempo testnet faucet..."
-            cast rpc tempo_fundAddress "$NEW_ADDRESS" --rpc-url https://rpc.moderato.tempo.xyz
+            if ! cast rpc tempo_fundAddress "$NEW_ADDRESS" --rpc-url https://rpc.moderato.tempo.xyz; then
+              echo "ERROR: Failed to fund address $NEW_ADDRESS via Tempo faucet."
+              exit 1
+            fi
 
             echo "POOL_PRIVATE_KEY=$NEW_PRIVATE_KEY" >> "$GITHUB_ENV"
             echo "POOL_ADDRESS=$NEW_ADDRESS" >> "$GITHUB_ENV"
