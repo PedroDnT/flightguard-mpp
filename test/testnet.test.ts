@@ -11,7 +11,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeAll } from 'vitest'
-import { PayoutEngine } from '../src/payout.js'
+import { createPublicClient, http } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+import { PayoutEngine, buildTempoChain } from '../src/payout.js'
 import type { AppConfig } from '../src/types.js'
 
 // ── Read credentials from environment ────────────────────────
@@ -49,20 +51,33 @@ describe.skipIf(!runTestnet)('Testnet integration — funded pool wallet', () =>
   }
 
   let engine: PayoutEngine
+  let publicClient: ReturnType<typeof createPublicClient>
 
   beforeAll(() => {
+    // Assert that POOL_PRIVATE_KEY and POOL_ADDRESS are consistent.
+    // PayoutEngine.getPoolBalance() derives the account address from the key
+    // (via privateKeyToAccount) and ignores config.poolAddress, so a mismatch
+    // would silently query the wrong wallet and produce a misleading balance.
+    const derivedAddress = privateKeyToAccount(POOL_PRIVATE_KEY as `0x${string}`).address
+    expect(derivedAddress.toLowerCase()).toBe(POOL_ADDRESS.toLowerCase())
+
+    const chain = buildTempoChain(TEMPO_RPC_URL, CHAIN_ID)
+    publicClient = createPublicClient({ chain, transport: http(TEMPO_RPC_URL) })
     engine = new PayoutEngine(config)
   })
 
-  it('connects to testnet RPC and reads pool balance', async () => {
-    const balance = await engine.getPoolBalance()
-    // getPoolBalance() returns a human-readable decimal string
-    expect(typeof balance).toBe('string')
-    expect(parseFloat(balance)).toBeGreaterThanOrEqual(0)
+  it('connects to testnet RPC — getChainId() matches expected chain', async () => {
+    // Unlike getPoolBalance(), getChainId() propagates RPC errors instead of
+    // swallowing them, giving a genuine connectivity assertion.
+    const chainId = await publicClient.getChainId()
+    expect(chainId).toBe(CHAIN_ID)
   }, 30_000)
 
-  it('pool is funded — balance is greater than zero after faucet', async () => {
-    const balance = await engine.getPoolBalance()
-    expect(parseFloat(balance)).toBeGreaterThan(0)
-  }, 30_000)
+  it('pool is funded — balance is greater than zero (polls until faucet confirms)', async () => {
+    // The faucet tx may not be reflected immediately after CI funding.
+    // Poll every 3 s (up to 120 s) so a brief propagation delay doesn't
+    // produce a spurious failure.
+    const readBalance = async () => parseFloat(await engine.getPoolBalance())
+    await expect.poll(readBalance, { interval: 3_000, timeout: 120_000 }).toBeGreaterThan(0)
+  }, 125_000)
 })
