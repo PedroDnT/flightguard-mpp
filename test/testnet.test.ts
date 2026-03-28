@@ -19,7 +19,7 @@ import type { AppConfig } from '../src/types.js'
 const POOL_PRIVATE_KEY = process.env.POOL_PRIVATE_KEY ?? ''
 const POOL_ADDRESS     = process.env.POOL_ADDRESS     ?? ''
 const TEMPO_RPC_URL    = process.env.TEMPO_RPC_URL    ?? 'https://rpc.moderato.tempo.xyz'
-const CHAIN_ID         = Number(process.env.CHAIN_ID  ?? '42431')
+const CHAIN_ID         = Number(process.env.CHAIN_ID  || '42431')
 const PATHUSD_ADDRESS  = (
   process.env.PATHUSD_ADDRESS ?? '0x20c0000000000000000000000000000000000000'
 ) as `0x${string}`
