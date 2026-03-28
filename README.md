@@ -159,6 +159,18 @@ cp .env.example .env
 # Fill in POOL_PRIVATE_KEY, POOL_ADDRESS, RAPIDAPI_KEY
 ```
 
+`POOL_ADDRESS` is the **public wallet address of the insurer pool**. In this demo, it should be the address derived from `POOL_PRIVATE_KEY` — the same wallet both **receives premiums** and **sends payouts**. You do **not** need to deploy the optional `FlightGuard.sol` contract before running the backend demo in this README.
+
+In practice:
+- `POOL_PRIVATE_KEY` = the private key of your Tempo wallet
+- `POOL_ADDRESS` = the public address of that same wallet
+- fund that wallet with enough `pathUSD` to cover payouts
+
+How to get `POOL_ADDRESS`:
+- If you already have the wallet in MetaMask, Rabby, or another EVM wallet, copy the wallet's **public address** and paste it into `POOL_ADDRESS`
+- If you generated the wallet elsewhere, use the public address paired with the private key you put in `POOL_PRIVATE_KEY`
+- `POOL_ADDRESS` must **match** `POOL_PRIVATE_KEY`; otherwise premiums may go to one wallet while payouts are attempted from another
+
 ### 4. Fund the pool
 ```bash
 npm run faucet          # funds POOL_ADDRESS from .env with 1M pathUSD (testnet only)
@@ -281,8 +293,8 @@ Watch the terminal — every 5 minutes you'll see:
 
 | Variable | Default | Description |
 |---|---|---|
-| `POOL_PRIVATE_KEY` | **required** | Pool wallet private key (the insurer) |
-| `POOL_ADDRESS` | **required** | Pool wallet address |
+| `POOL_PRIVATE_KEY` | **required** | Private key for the insurer pool wallet; used to send payouts |
+| `POOL_ADDRESS` | **required** | Public address of the same pool wallet; receives MPP premiums |
 | `RAPIDAPI_KEY` | **required** | AeroDataBox API key |
 | `TEMPO_RPC_URL` | testnet RPC | Tempo network RPC endpoint |
 | `CHAIN_ID` | `42431` | Tempo chain ID (42431 = testnet, 4217 = mainnet) |
@@ -293,6 +305,12 @@ Watch the terminal — every 5 minutes you'll see:
 | `DELAY_THRESHOLD_MIN` | `60` | Minimum delay (minutes) to trigger payout |
 | `CHECK_INTERVAL_MS` | `300000` | Checker poll interval (ms) — default 5 minutes |
 | `STORE_PATH` | `policies.json` | Path for persisting policies to disk |
+
+### Do I need to deploy a contract first?
+
+No — **not for the backend flow documented here**. The README demo works with a regular funded Tempo wallet acting as the insurer pool.
+
+The contract in `contracts/FlightGuard.sol` is an **optional on-chain layer** for a different architecture. Only deploy it if you want to use the Solidity contract flow or extend the demo beyond the current server-managed policy model.
 
 ---
 
