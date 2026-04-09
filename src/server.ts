@@ -12,6 +12,7 @@ import { Mppx, tempo } from 'mppx/server'
 import { store } from './store.js'
 import { fetchFlightInfo, getScheduledDepartureUtc } from './flight.js'
 import { PayoutEngine } from './payout.js'
+import type { AlchemyClient } from './alchemy.js'
 import type { AppConfig, InsureRequest, InsureResponse, PolicyResponse } from './types.js'
 
 // Simple in-memory rate limiter: 10 req / 60s per IP
@@ -31,7 +32,7 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
-export function buildServer(config: AppConfig): Hono {
+export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = null): Hono {
   const app = new Hono()
   const payoutEngine = new PayoutEngine(config)
 
@@ -106,6 +107,14 @@ export function buildServer(config: AppConfig): Hono {
     }
 
     console.log(`[SERVER] Insuring flight ${flightNumber} on ${date} → ${payoutAddress}`)
+
+    // Check policyholder balance via Alchemy Portfolio API (best-effort, non-blocking)
+    if (alchemy) {
+      const balance = await alchemy.getPathUsdBalance(payoutAddress, config.pathUsdAddress)
+      if (balance !== null) {
+        console.log(`[SERVER] Policyholder ${payoutAddress} pathUSD balance: ${balance}`)
+      }
+    }
 
     // Verify flight exists
     let flightInfo

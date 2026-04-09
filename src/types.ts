@@ -156,6 +156,10 @@ export interface AppConfig {
 
   // External APIs
   rapidApiKey: string
+
+  // Alchemy integration (optional)
+  alchemyApiKey?: string
+  alchemyServiceUrl?: string  // MPP service endpoint — discover via: tempo wallet services --search alchemy
 }
 
 // ------------------------------------------------------------
@@ -180,3 +184,13 @@ export const TEMPO_MAINNET = {
   rpcUrl: 'https://rpc.tempo.xyz',
   explorer: 'https://explore.tempo.xyz',
 } as const
+
+export function alchemyRpcUrl(chainId: number, apiKey: string): string {
+  const net = chainId === 4217 ? 'tempo-mainnet' : 'tempo-moderato'
+  return `https://${net}.g.alchemy.com/v2/${apiKey}`
+}
+
+export function alchemyWsUrl(chainId: number, apiKey: string): string {
+  const net = chainId === 4217 ? 'tempo-mainnet' : 'tempo-moderato'
+  return `wss://${net}.g.alchemy.com/v2/${apiKey}`
+}

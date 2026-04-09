@@ -7,6 +7,7 @@ import {
   createWalletClient,
   createPublicClient,
   http,
+  webSocket,
   parseUnits,
   formatUnits,
   defineChain,
@@ -15,6 +16,7 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import {
   PATHUSD_DECIMALS,
+  alchemyWsUrl,
   type PayoutRequest,
   type PayoutResult,
   type AppConfig,
@@ -24,13 +26,16 @@ import {
 // Tempo chain definition (viem)
 // ------------------------------------------------------------
 
-export function buildTempoChain(rpcUrl: string, chainId: number) {
+export function buildTempoChain(rpcUrl: string, chainId: number, wsUrl?: string) {
   return defineChain({
     id: chainId,
     name: chainId === 4217 ? 'Tempo Mainnet' : 'Tempo Testnet',
     nativeCurrency: { name: 'USD', symbol: 'USD', decimals: 18 },
     rpcUrls: {
-      default: { http: [rpcUrl] },
+      default: {
+        http: [rpcUrl],
+        ...(wsUrl ? { webSocket: [wsUrl] } : {}),
+      },
     },
   })
 }
@@ -69,7 +74,10 @@ export class PayoutEngine {
 
   constructor(config: AppConfig) {
     this.config = config
-    this.chain = buildTempoChain(config.tempoRpcUrl, config.chainId)
+    const wsUrl = config.alchemyApiKey
+      ? alchemyWsUrl(config.chainId, config.alchemyApiKey)
+      : undefined
+    this.chain = buildTempoChain(config.tempoRpcUrl, config.chainId, wsUrl)
   }
 
   /**
@@ -95,7 +103,9 @@ export class PayoutEngine {
 
       const publicClient = createPublicClient({
         chain: this.chain,
-        transport: http(this.config.tempoRpcUrl),
+        transport: this.config.alchemyApiKey
+          ? webSocket(alchemyWsUrl(this.config.chainId, this.config.alchemyApiKey))
+          : http(this.config.tempoRpcUrl),
       })
 
       // Convert human-readable amount to token units (6 decimals)
@@ -161,7 +171,9 @@ export class PayoutEngine {
     try {
       const publicClient = createPublicClient({
         chain: this.chain,
-        transport: http(this.config.tempoRpcUrl),
+        transport: this.config.alchemyApiKey
+          ? webSocket(alchemyWsUrl(this.config.chainId, this.config.alchemyApiKey))
+          : http(this.config.tempoRpcUrl),
       })
 
       const account = privateKeyToAccount(this.config.poolPrivateKey)
