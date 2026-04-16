@@ -11,17 +11,20 @@ import {
   isFlightTerminal,
 } from './flight.js'
 import { PayoutEngine, buildPayoutMemo } from './payout.js'
+import type { AlchemyClient } from './alchemy.js'
 import type { AppConfig, CheckResult } from './types.js'
 
 export class FlightChecker {
   private config: AppConfig
   private payoutEngine: PayoutEngine
+  private alchemy: AlchemyClient | null
   private intervalHandle: ReturnType<typeof setInterval> | null = null
   private isRunning = false
 
-  constructor(config: AppConfig) {
+  constructor(config: AppConfig, alchemy: AlchemyClient | null = null) {
     this.config = config
     this.payoutEngine = new PayoutEngine(config)
+    this.alchemy = alchemy
   }
 
   /**
@@ -162,6 +165,15 @@ export class FlightChecker {
       // Any concurrent checkPolicy() call will hit the status !== 'active'
       // guard at the top of this function and return null before reaching here.
       store.update(policyId, { status: 'paid_out' })
+
+      // Log real USD value of payout via Alchemy Prices API (best-effort)
+      if (this.alchemy) {
+        const price = await this.alchemy.getPathUsdPrice()
+        if (price !== null) {
+          const usdValue = (Number(policy.payoutAmount) * price).toFixed(2)
+          console.log(`[CHECKER]   Payout real value: ~$${usdValue} USD (pathUSD @ $${price})`)
+        }
+      }
 
       const memo = buildPayoutMemo(policyId, policy.flightNumber, policy.date)
       const payoutResult = await this.payoutEngine.sendPayout({

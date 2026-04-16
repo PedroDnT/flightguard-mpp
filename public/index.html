@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlightGuard — Parametric Flight Delay Insurance</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 64px;
+    }
+
+    header {
+      max-width: 600px;
+      margin: 0 auto 32px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 1rem;
+    }
+
+    /* Pool stats bar */
+    #pool-bar {
+      max-width: 600px;
+      margin: 0 auto 28px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 24px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    #pool-bar .stat { display: flex; gap: 6px; align-items: center; }
+    #pool-bar .stat span { font-weight: 600; color: var(--text); }
+
+    /* Cards */
+    .card {
+      max-width: 600px;
+      margin: 0 auto 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    /* Form */
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    label .hint {
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-left: 4px;
+    }
+
+    input[type="text"], input[type="date"], textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .15s;
+      outline: none;
+    }
+
+    input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+    }
+
+    .field-error {
+      font-size: 0.78rem;
+      color: var(--danger);
+      margin-top: 4px;
+      display: none;
+    }
+
+    .field-error.visible { display: block; }
+
+    /* Buttons */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 11px 22px;
+      transition: background .15s, opacity .15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background: var(--border); }
+
+    /* Alerts */
+    .alert {
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .alert.visible { display: block; }
+    .alert-success { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; }
+    .alert-danger  { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+    .alert-warn    { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+
+    .alert h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+    .alert p  { margin-bottom: 6px; line-height: 1.5; }
+    .alert code {
+      display: block;
+      background: rgba(0,0,0,.06);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 0.82rem;
+      margin: 8px 0;
+      word-break: break-all;
+    }
+
+    /* Policy result */
+    .policy-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .policy-row:last-child { border-bottom: none; }
+    .policy-row .key { color: var(--muted); }
+    .policy-row .val { font-weight: 600; text-align: right; max-width: 70%; word-break: break-all; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .badge-active   { background: #dbeafe; color: #1e40af; }
+    .badge-paid_out { background: #d1fae5; color: #065f46; }
+    .badge-expired  { background: #f1f5f9; color: #64748b; }
+    .badge-cancelled{ background: #fee2e2; color: #991b1b; }
+
+    /* Status lookup */
+    .lookup-row {
+      display: flex;
+      gap: 10px;
+    }
+    .lookup-row input { flex: 1; }
+    .lookup-row button { width: auto; flex-shrink: 0; }
+
+    /* Credential retry section */
+    #payment-section textarea {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    #payment-section .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    #payment-section .btn-group button { flex: 1; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      max-width: 600px;
+      margin: 32px auto 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>✈ FlightGuard</h1>
+  <p>Parametric flight delay insurance on the Tempo blockchain</p>
+</header>
+
+<!-- Pool stats bar -->
+<div id="pool-bar">
+  <div class="stat">Pool <span id="stat-balance">loading…</span></div>
+  <div class="stat">Premium <span id="stat-premium">—</span></div>
+  <div class="stat">Payout <span id="stat-payout">—</span></div>
+  <div class="stat">Delay trigger <span id="stat-delay">—</span></div>
+</div>
+
+<!-- ── Buy Insurance ─────────────────────────────────────────── -->
+<div class="card">
+  <h2>Buy Flight Delay Insurance</h2>
+
+  <div class="field">
+    <label for="flightNumber">Flight Number <span class="hint">e.g. LA3251</span></label>
+    <input type="text" id="flightNumber" placeholder="LA3251" maxlength="8" autocomplete="off" />
+    <div class="field-error" id="err-flight">Enter a valid flight number (2–8 alphanumeric characters)</div>
+  </div>
+
+  <div class="field">
+    <label for="flightDate">Departure Date</label>
+    <input type="date" id="flightDate" />
+    <div class="field-error" id="err-date">Date must be today or in the future</div>
+  </div>
+
+  <div class="field">
+    <label for="payoutAddress">Payout Wallet Address <span class="hint">receives payout if flight is delayed</span></label>
+    <input type="text" id="payoutAddress" placeholder="0x…" autocomplete="off" />
+    <div class="field-error" id="err-addr">Enter a valid EVM address (0x + 40 hex characters)</div>
+  </div>
+
+  <button class="btn-primary" id="btn-insure" onclick="submitInsure()">
+    Buy Insurance
+  </button>
+
+  <!-- Success -->
+  <div class="alert alert-success" id="alert-success">
+    <h3>✅ Policy Active</h3>
+    <div id="policy-details"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="alert alert-danger" id="alert-error">
+    <h3>❌ Error</h3>
+    <p id="error-message"></p>
+  </div>
+
+  <!-- 402 Payment Required -->
+  <div class="alert alert-warn" id="alert-payment">
+    <h3>💳 Payment Required</h3>
+    <p>Send <strong id="pay-amount">1.00 pathUSD</strong> to the pool address to complete your purchase:</p>
+    <code id="pay-pool-address">loading…</code>
+    <p style="margin-top:10px;">Use the Tempo CLI:</p>
+    <code id="pay-cli-cmd">tempo wallet transfer 1 pathUSD &lt;pool-address&gt;</code>
+    <div id="payment-section" style="margin-top:16px;">
+      <label for="credential-input" style="color: #92400e;">Paste your payment credential to complete purchase:</label>
+      <textarea id="credential-input" placeholder="Paste Authorization credential from Tempo wallet…"></textarea>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="cancelPayment()">Cancel</button>
+        <button class="btn-primary" style="width:auto;" onclick="retryWithCredential()">Complete Purchase →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Check Policy Status ────────────────────────────────────── -->
+<div class="card">
+  <h2>Check Policy Status</h2>
+  <div class="lookup-row">
+    <input type="text" id="policyId" placeholder="Policy ID (e.g. abc123-…)" />
+    <button class="btn-secondary" onclick="lookupPolicy()">Check →</button>
+  </div>
+  <div class="alert alert-success" id="policy-result" style="margin-top:16px;"></div>
+  <div class="alert alert-danger"  id="policy-error"  style="margin-top:16px;"></div>
+</div>
+
+<footer>
+  Powered by <a href="https://tempo.xyz" target="_blank" style="color:var(--accent);">Tempo</a> ·
+  Payouts settle automatically on-chain ·
+  Testnet
+</footer>
+
+<script>
+  // ── State ──────────────────────────────────────────────────
+  let pendingRequest = null   // { flightNumber, date, payoutAddress }
+  let poolAddress = ''
+
+  // ── Boot: load pool health ─────────────────────────────────
+  async function loadHealth() {
+    try {
+      const r = await fetch('/health')
+      if (!r.ok) return
+      const d = await r.json()
+      poolAddress = d.pool?.address ?? ''
+      const bal = d.pool?.balance ?? '—'
+      const premium = d.config?.premium ?? '—'
+      const mult = d.config?.payoutMultiplier ?? ''
+      const delay = d.config?.delayThresholdMin ?? '—'
+      const payoutVal = premium && mult
+        ? (parseFloat(premium) * mult).toFixed(2) + ' pathUSD'
+        : '—'
+
+      el('stat-balance').textContent = bal
+      el('stat-premium').textContent = premium
+      el('stat-payout').textContent = payoutVal
+      el('stat-delay').textContent = delay + ' min'
+
+      // Pre-fill CLI command
+      if (poolAddress) {
+        el('pay-pool-address').textContent = poolAddress
+        el('pay-cli-cmd').textContent =
+          'tempo wallet transfer ' + (parseFloat(premium||'1')).toFixed(2) + ' pathUSD ' + poolAddress
+      }
+    } catch (_) {}
+  }
+
+  // ── Helpers ────────────────────────────────────────────────
+  function el(id) { return document.getElementById(id) }
+
+  function setLoading(loading) {
+    const btn = el('btn-insure')
+    btn.disabled = loading
+    btn.innerHTML = loading
+      ? '<span class="spinner"></span>Processing…'
+      : 'Buy Insurance'
+  }
+
+  function hideAlerts() {
+    el('alert-success').classList.remove('visible')
+    el('alert-error').classList.remove('visible')
+    el('alert-payment').classList.remove('visible')
+  }
+
+  function showError(msg) {
+    hideAlerts()
+    el('error-message').textContent = msg
+    el('alert-error').classList.add('visible')
+  }
+
+  function clearFieldErrors() {
+    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('visible'))
+  }
+
+  // ── Validation ─────────────────────────────────────────────
+  function validate() {
+    clearFieldErrors()
+    let ok = true
+
+    const flight = el('flightNumber').value.trim()
+    if (!/^[A-Z0-9]{2,8}$/i.test(flight)) {
+      el('err-flight').classList.add('visible')
+      ok = false
+    }
+
+    const date = el('flightDate').value
+    if (!date) {
+      el('err-date').classList.add('visible')
+      ok = false
+    } else {
+      const today = new Date()
+      today.setUTCHours(0, 0, 0, 0)
+      if (new Date(date + 'T00:00:00Z') < today) {
+        el('err-date').classList.add('visible')
+        ok = false
+      }
+    }
+
+    const addr = el('payoutAddress').value.trim()
+    if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+      el('err-addr').classList.add('visible')
+      ok = false
+    }
+
+    return ok
+  }
+
+  // ── POST /insure ───────────────────────────────────────────
+  async function submitInsure(credential) {
+    if (!credential && !validate()) return
+
+    hideAlerts()
+    setLoading(true)
+
+    const body = pendingRequest || {
+      flightNumber: el('flightNumber').value.trim().toUpperCase(),
+      date: el('flightDate').value,
+      payoutAddress: el('payoutAddress').value.trim(),
+    }
+
+    const headers = { 'Content-Type': 'application/json' }
+    if (credential) headers['Authorization'] = credential
+
+    try {
+      const r = await fetch('/insure', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      })
+
+      if (r.status === 201) {
+        const d = await r.json()
+        pendingRequest = null
+        showPolicy(d)
+        return
+      }
+
+      if (r.status === 402) {
+        pendingRequest = body
+        const wwwAuth = r.headers.get('WWW-Authenticate') || ''
+        show402(wwwAuth)
+        return
+      }
+
+      const d = await r.json().catch(() => ({}))
+      showError(d.error || 'Request failed (' + r.status + ')')
+
+    } catch (e) {
+      showError('Network error: ' + e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function show402(wwwAuth) {
+    hideAlerts()
+    el('alert-payment').classList.add('visible')
+    el('credential-input').value = ''
+    // Update pool address in CLI command if we got it from auth header
+    if (poolAddress) {
+      el('pay-pool-address').textContent = poolAddress
+    }
+  }
+
+  function cancelPayment() {
+    pendingRequest = null
+    hideAlerts()
+    el('credential-input').value = ''
+  }
+
+  function retryWithCredential() {
+    const cred = el('credential-input').value.trim()
+    if (!cred) {
+      alert('Please paste your payment credential first.')
+      return
+    }
+    submitInsure(cred)
+  }
+
+  function showPolicy(d) {
+    hideAlerts()
+    const details = el('policy-details')
+    details.innerHTML = renderPolicyRows(d)
+    el('alert-success').classList.add('visible')
+    // Pre-fill policy checker
+    if (d.policyId) el('policyId').value = d.policyId
+  }
+
+  function renderPolicyRows(d) {
+    const rows = [
+      ['Policy ID',        d.policyId],
+      ['Flight',           d.flightNumber + ' · ' + d.date],
+      ['Departs (UTC)',    d.scheduledDeparture ?? '—'],
+      ['Premium paid',     (d.premium ?? '—') + ' pathUSD'],
+      ['Payout if delayed',(d.payoutAmount ?? '—') + ' pathUSD'],
+      ['Payout address',   d.payoutAddress],
+      ['Status',           '<span class="badge badge-' + d.status + '">' + d.status + '</span>'],
+    ]
+    return rows.map(([k, v]) =>
+      '<div class="policy-row"><span class="key">' + k + '</span><span class="val">' + v + '</span></div>'
+    ).join('')
+  }
+
+  // ── GET /policy/:id ────────────────────────────────────────
+  async function lookupPolicy() {
+    const id = el('policyId').value.trim()
+    el('policy-result').classList.remove('visible')
+    el('policy-error').classList.remove('visible')
+
+    if (!id) return
+
+    try {
+      const r = await fetch('/policy/' + encodeURIComponent(id))
+      if (r.status === 404) {
+        el('policy-error').innerHTML = '<h3>Not Found</h3><p>No policy with that ID.</p>'
+        el('policy-error').classList.add('visible')
+        return
+      }
+      const d = await r.json()
+      const p = d.policy
+      if (!p) return
+
+      const rows = [
+        ['Policy ID',        p.id],
+        ['Status',           '<span class="badge badge-' + p.status + '">' + p.status + '</span>'],
+        ['Flight',           p.flightNumber + ' · ' + p.date],
+        ['Departs (UTC)',    p.scheduledDeparture ?? '—'],
+        ['Payout amount',    p.payoutAmount + ' pathUSD'],
+        ['Payout address',   p.payoutAddress],
+      ]
+      if (p.payoutTxHash) {
+        rows.push(['Tx hash', '<a href="#" style="color:var(--accent);word-break:break-all;">' + p.payoutTxHash + '</a>'])
+      }
+      if (p.lastFlightStatus) {
+        rows.push(['Last flight status', p.lastFlightStatus])
+      }
+
+      el('policy-result').innerHTML =
+        '<h3>Policy Found</h3>' +
+        rows.map(([k, v]) =>
+          '<div class="policy-row"><span class="key">' + k + '</span><span class="val">' + v + '</span></div>'
+        ).join('')
+      el('policy-result').classList.add('visible')
+
+    } catch (e) {
+      el('policy-error').innerHTML = '<h3>Error</h3><p>' + e.message + '</p>'
+      el('policy-error').classList.add('visible')
+    }
+  }
+
+  // Allow Enter key in policy lookup
+  el('policyId').addEventListener('keydown', e => { if (e.key === 'Enter') lookupPolicy() })
+
+  // Set date min to today
+  const today = new Date().toISOString().slice(0, 10)
+  el('flightDate').setAttribute('min', today)
+
+  // Boot
+  loadHealth()
+</script>
+
+</body>
+</html>
