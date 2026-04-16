@@ -8,6 +8,7 @@
 
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Mppx, tempo } from 'mppx/server'
 import { store } from './store.js'
 import { fetchFlightInfo, getScheduledDepartureUtc } from './flight.js'
@@ -35,6 +36,9 @@ function checkRateLimit(ip: string): boolean {
 export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = null): Hono {
   const app = new Hono()
   const payoutEngine = new PayoutEngine(config)
+
+  // Serve the purchase UI from public/
+  app.use('/*', serveStatic({ root: './public' }))
 
   // --- MPP setup ---
   const mppx = Mppx.create({
