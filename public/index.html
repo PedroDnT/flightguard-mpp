@@ -348,6 +348,12 @@
   // ── State ──────────────────────────────────────────────────
   let pendingRequest = null   // { flightNumber, date, payoutAddress }
   let poolAddress = ''
+  let explorerBase = 'https://explore.testnet.tempo.xyz'
+
+  // Escape HTML entities to prevent XSS when interpolating server data into innerHTML
+  function esc(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  }
 
   // ── Boot: load pool health ─────────────────────────────────
   async function loadHealth() {
@@ -356,6 +362,9 @@
       if (!r.ok) return
       const d = await r.json()
       poolAddress = d.pool?.address ?? ''
+      explorerBase = d.network?.chainId === 4217
+        ? 'https://explore.tempo.xyz'
+        : 'https://explore.testnet.tempo.xyz'
       const bal = d.pool?.balance ?? '—'
       const premium = d.config?.premium ?? '—'
       const mult = d.config?.payoutMultiplier ?? ''
@@ -521,13 +530,13 @@
 
   function renderPolicyRows(d) {
     const rows = [
-      ['Policy ID',        d.policyId],
-      ['Flight',           d.flightNumber + ' · ' + d.date],
-      ['Departs (UTC)',    d.scheduledDeparture ?? '—'],
-      ['Premium paid',     (d.premium ?? '—') + ' pathUSD'],
-      ['Payout if delayed',(d.payoutAmount ?? '—') + ' pathUSD'],
-      ['Payout address',   d.payoutAddress],
-      ['Status',           '<span class="badge badge-' + d.status + '">' + d.status + '</span>'],
+      ['Policy ID',        esc(d.policyId)],
+      ['Flight',           esc(d.flightNumber) + ' · ' + esc(d.date)],
+      ['Departs (UTC)',    esc(d.scheduledDeparture ?? '—')],
+      ['Premium paid',     esc(d.premium ?? '—') + ' pathUSD'],
+      ['Payout if delayed',esc(d.payoutAmount ?? '—') + ' pathUSD'],
+      ['Payout address',   esc(d.payoutAddress)],
+      ['Status',           '<span class="badge badge-' + esc(d.status) + '">' + esc(d.status) + '</span>'],
     ]
     return rows.map(([k, v]) =>
       '<div class="policy-row"><span class="key">' + k + '</span><span class="val">' + v + '</span></div>'
@@ -554,18 +563,20 @@
       if (!p) return
 
       const rows = [
-        ['Policy ID',        p.id],
-        ['Status',           '<span class="badge badge-' + p.status + '">' + p.status + '</span>'],
-        ['Flight',           p.flightNumber + ' · ' + p.date],
-        ['Departs (UTC)',    p.scheduledDeparture ?? '—'],
-        ['Payout amount',    p.payoutAmount + ' pathUSD'],
-        ['Payout address',   p.payoutAddress],
+        ['Policy ID',        esc(p.id)],
+        ['Status',           '<span class="badge badge-' + esc(p.status) + '">' + esc(p.status) + '</span>'],
+        ['Flight',           esc(p.flightNumber) + ' · ' + esc(p.date)],
+        ['Departs (UTC)',    esc(p.scheduledDeparture ?? '—')],
+        ['Payout amount',    esc(p.payoutAmount) + ' pathUSD'],
+        ['Payout address',   esc(p.payoutAddress)],
       ]
       if (p.payoutTxHash) {
-        rows.push(['Tx hash', '<a href="#" style="color:var(--accent);word-break:break-all;">' + p.payoutTxHash + '</a>'])
+        rows.push(['Tx hash',
+          '<a href="' + explorerBase + '/tx/' + esc(p.payoutTxHash) + '" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all;">' + esc(p.payoutTxHash) + '</a>'
+        ])
       }
       if (p.lastFlightStatus) {
-        rows.push(['Last flight status', p.lastFlightStatus])
+        rows.push(['Last flight status', esc(p.lastFlightStatus)])
       }
 
       el('policy-result').innerHTML =
@@ -576,7 +587,7 @@
       el('policy-result').classList.add('visible')
 
     } catch (e) {
-      el('policy-error').innerHTML = '<h3>Error</h3><p>' + e.message + '</p>'
+      el('policy-error').innerHTML = '<h3>Error</h3><p>' + esc(e.message) + '</p>'
       el('policy-error').classList.add('visible')
     }
   }

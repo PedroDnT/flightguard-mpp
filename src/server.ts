@@ -37,9 +37,6 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
   const app = new Hono()
   const payoutEngine = new PayoutEngine(config)
 
-  // Serve the purchase UI from public/
-  app.use('/*', serveStatic({ root: './public' }))
-
   // --- MPP setup ---
   const mppx = Mppx.create({
     methods: [
@@ -208,6 +205,9 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
       },
     })
   })
+
+  // Serve the purchase UI from public/ — registered last so API routes take priority
+  app.use('/*', serveStatic({ root: './public' }))
 
   return app
 }

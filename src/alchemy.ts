@@ -74,7 +74,7 @@ export class AlchemyClient {
     try {
       const res = await this.mppx.fetch(
         `${this.serviceUrl}/portfolio/v1/tokens/balances` +
-        `?addresses[]=${address}&contractAddresses[]=${pathUsdAddress}`,
+        `?addresses[]=${encodeURIComponent(address)}&contractAddresses[]=${encodeURIComponent(pathUsdAddress)}`,
       )
       if (!res.ok) return null
       const data = await res.json() as {

@@ -71,6 +71,9 @@ const ERC20_ABI = [
 export class PayoutEngine {
   private config: AppConfig
   private chain: ReturnType<typeof buildTempoChain>
+  private account: ReturnType<typeof privateKeyToAccount>
+  private publicClient: ReturnType<typeof createPublicClient>
+  private walletClient: ReturnType<typeof createWalletClient>
 
   constructor(config: AppConfig) {
     this.config = config
@@ -78,6 +81,22 @@ export class PayoutEngine {
       ? alchemyWsUrl(config.chainId, config.alchemyApiKey)
       : undefined
     this.chain = buildTempoChain(config.tempoRpcUrl, config.chainId, wsUrl)
+    this.account = privateKeyToAccount(config.poolPrivateKey)
+
+    // Single shared client instances — WebSocket transport opens a persistent
+    // connection, so recreating on every call would leak connections.
+    this.publicClient = createPublicClient({
+      chain: this.chain,
+      transport: config.alchemyApiKey
+        ? webSocket(alchemyWsUrl(config.chainId, config.alchemyApiKey))
+        : http(config.tempoRpcUrl),
+    })
+
+    this.walletClient = createWalletClient({
+      account: this.account,
+      chain: this.chain,
+      transport: http(config.tempoRpcUrl),
+    })
   }
 
   /**
@@ -93,32 +112,17 @@ export class PayoutEngine {
     if (memo) console.log(`[PAYOUT]   Memo:   ${memo}`)
 
     try {
-      const account = privateKeyToAccount(this.config.poolPrivateKey)
-
-      const walletClient = createWalletClient({
-        account,
-        chain: this.chain,
-        transport: http(this.config.tempoRpcUrl),
-      })
-
-      const publicClient = createPublicClient({
-        chain: this.chain,
-        transport: this.config.alchemyApiKey
-          ? webSocket(alchemyWsUrl(this.config.chainId, this.config.alchemyApiKey))
-          : http(this.config.tempoRpcUrl),
-      })
-
       // Convert human-readable amount to token units (6 decimals)
       const amountUnits = parseUnits(amountHuman, PATHUSD_DECIMALS)
 
       console.log(`[PAYOUT] Amount in units: ${amountUnits.toString()}`)
 
       // Check pool balance before sending
-      const poolBalance = await publicClient.readContract({
+      const poolBalance = await this.publicClient.readContract({
         address: this.config.pathUsdAddress,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
-        args: [account.address],
+        args: [this.account.address],
       })
 
       const poolBalanceHuman = formatUnits(poolBalance, PATHUSD_DECIMALS)
@@ -131,7 +135,9 @@ export class PayoutEngine {
       }
 
       // Send the transfer
-      const txHash = await walletClient.writeContract({
+      const txHash = await this.walletClient.writeContract({
+        chain: this.chain,
+        account: this.account,
         address: this.config.pathUsdAddress,
         abi: ERC20_ABI,
         functionName: 'transfer',
@@ -142,7 +148,7 @@ export class PayoutEngine {
       console.log(`[PAYOUT] Explorer: ${getExplorerUrl(this.config.chainId, txHash)}`)
 
       // Wait for confirmation
-      const receipt = await publicClient.waitForTransactionReceipt({
+      const receipt = await this.publicClient.waitForTransactionReceipt({
         hash: txHash,
         timeout: 30_000, // 30s timeout — Tempo has sub-second finality
       })
@@ -169,20 +175,11 @@ export class PayoutEngine {
    */
   async getPoolBalance(): Promise<string> {
     try {
-      const publicClient = createPublicClient({
-        chain: this.chain,
-        transport: this.config.alchemyApiKey
-          ? webSocket(alchemyWsUrl(this.config.chainId, this.config.alchemyApiKey))
-          : http(this.config.tempoRpcUrl),
-      })
-
-      const account = privateKeyToAccount(this.config.poolPrivateKey)
-
-      const balance = await publicClient.readContract({
+      const balance = await this.publicClient.readContract({
         address: this.config.pathUsdAddress,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
-        args: [account.address],
+        args: [this.account.address],
       })
 
       return formatUnits(balance, PATHUSD_DECIMALS)
