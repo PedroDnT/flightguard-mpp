@@ -8,6 +8,7 @@ interface Policy {
   flightNumber: string
   date: string
   status: string
+  premium: string
   payoutAmount: string
   payoutAddress: string
   scheduledDeparture: string
