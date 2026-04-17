@@ -154,7 +154,7 @@ export default function PoliciesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm text-gray-600">Premium Paid</span>
-                    <p className="font-bold text-lg mt-1">{policy.payoutAmount} pathUSD</p>
+                    <p className="font-bold text-lg mt-1">{policy.premium} pathUSD</p>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">Payout Amount</span>
