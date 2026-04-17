@@ -6,7 +6,7 @@ import {
   AERODATABOX_BASE_URL,
   type FlightInfo,
   type FlightStatus,
-} from './types.js'
+} from './types'
 
 // In-memory cache for AeroDataBox responses (4min TTL)
 const FLIGHT_CACHE_TTL_MS = 4 * 60 * 1000

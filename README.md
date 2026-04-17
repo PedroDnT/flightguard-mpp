@@ -1,358 +1,140 @@
-# FlightGuard MPP
+# FlightGuard MPP - Next.js Webapp
 
-**Parametric flight delay insurance on [Tempo](https://tempo.xyz) using the [Machine Payments Protocol](https://mpp.dev).**
+## Overview
 
-Built by [OCTO INTELIGÊNCIA DE DADOS LTDA](https://github.com/PedroDnT) for the Tempo MPP Hackathon.
+FlightGuard is a parametric flight delay insurance platform built on the Tempo blockchain using the Machine Payments Protocol (MPP). This Next.js application provides a user-friendly interface for purchasing flight insurance and an admin panel for managing the insurance pool.
 
----
+## Features
 
-## What Is This?
+### User Features
+- **Flight Search**: Search for flights by date and purchase insurance
+- **Buy Insurance**: Purchase parametric insurance with MPP micropayments (1 pathUSD premium)
+- **Policy Tracking**: Track policy status and view payout information
+- **Automatic Payouts**: Receive 5 pathUSD automatically if flight is delayed 60+ minutes
 
-FlightGuard eliminates the traditional insurance claims process entirely.
+### Admin Features
+- **Simple Password Authentication**: Secure admin access with environment variable password
+- **Pool Management**: View pool balance and statistics
+- **Policy Overview**: See all policies and their statuses
+- **Audit Logs**: Track all system events and admin actions
 
-1. **Pay premium** via MPP (one stablecoin micropayment, ~$1)
-2. **Flight is monitored** automatically every 5 minutes via AeroDataBox
-3. **Payout fires automatically** if departure delay exceeds 60 minutes — no claim required
+## Tech Stack
 
-No paperwork. No adjusters. No waiting. Pure parametric: data → condition → payment.
-
----
-
-## Policy Lifecycle
-
-```
-Agent/User                    FlightGuard Server              Tempo Blockchain
-     |                               |                               |
-     |-- POST /insure (MPP) -------->|                               |
-     |   pays 1 pathUSD premium      |-- verify payment ------------>|
-     |                               |<- payment confirmed ----------|
-     |                               |-- fetch flight via AeroDataBox|
-     |<-- { policyId, payoutAmt } ---|                               |
-     |                               |                               |
-     |                    [every 5 min: check flight]                |
-     |                               |-- GET flight status           |
-     |                               |   delay > 60min? YES          |
-     |                               |-- transfer(payoutAddr, 5 USD) |
-     |                               |                               |
-     |<-- 5 pathUSD arrives -------->|                               |
-```
-
-### Detailed Flow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Server as FlightGuard Server
-    participant MPP as mppx / Tempo
-    participant ADB as AeroDataBox
-    participant Chain as Tempo Chain
-
-    User->>Server: POST /insure { flightNumber, date, payoutAddress }
-    Server->>MPP: mppx.charge(1 pathUSD)
-    MPP-->>User: 402 Payment Required
-    User->>MPP: Pay 1 pathUSD
-    MPP-->>Server: Payment confirmed
-    Server->>Server: Rate limit check (10 req/60s per IP)
-    Server->>ADB: fetchFlightInfo(flightNumber, date)
-    ADB-->>Server: FlightInfo
-    Server->>Server: store.create() → policyId, payoutAmount = 5 pathUSD
-    Server-->>User: 201 { policyId, payoutAmount, status: active }
-
-    loop Every 5 minutes (parallel per policy)
-        Server->>Server: store.cleanup() — remove 7d+ terminal policies
-        Server->>ADB: fetchFlightInfo() [4-min cache]
-        ADB-->>Server: FlightInfo { status, delay }
-
-        alt Flight cancelled
-            Server->>Server: store.markExpired()
-        else Departed AND delay >= 60min
-            Server->>Server: store.update(status: paid_out) — lock before transfer
-            Server->>Chain: transfer(payoutAddress, 5 pathUSD)
-            Chain-->>Server: txHash
-            Server->>Server: store.markPaidOut(txHash)
-        else Terminal AND delay < 60min
-            Server->>Server: store.markExpired()
-        else In progress
-            Server->>Server: store.recordCheck() — retry next cycle
-        end
-    end
-```
-
----
-
-## Codebase Map
-
-```
-flightguard-mpp/
-├── index.ts              ← Boot: loads config, starts server + checker, graceful shutdown
-│
-├── src/
-│   ├── types.ts          ← All TypeScript types, interfaces, constants (AppConfig, Policy, FlightInfo)
-│   ├── server.ts         ← Hono HTTP server: MPP-gated routes, IP rate limiter, input validation
-│   ├── checker.ts        ← Cron loop: parallel flight checks, payout triggers, 7-day TTL cleanup
-│   ├── flight.ts         ← AeroDataBox API wrapper + normalizer (4-min response cache)
-│   ├── payout.ts         ← Tempo pathUSD transfer engine (viem ERC-20)
-│   └── store.ts          ← Policy store: in-memory Map + JSON file persistence
-│
-├── test/
-│   ├── flight.test.ts    ← Unit tests: delay helpers, departure/terminal status (14 tests)
-│   └── store.test.ts     ← Unit tests: create, markPaidOut, cleanup, countByStatus (14 tests)
-│
-├── contracts/
-│   ├── FlightGuard.sol   ← On-chain policy registry + USDC pool (optional on-chain layer)
-│   └── MockERC20.sol     ← ERC-20 mock for Hardhat tests
-│
-├── scripts/
-│   ├── deploy.js         ← Deploy FlightGuard contract to testnet/mainnet
-│   └── faucet.js         ← Fund pool with testnet pathUSD (Foundry cast)
-│
-├── vitest.config.ts      ← Unit test config (TypeScript files only)
-├── hardhat.config.js     ← Contract test + network config
-└── .env.example          ← Environment variable template (12 vars)
-```
-
-### Module Dependency Graph
-
-```
-                    ┌─────────────────┐
-                    │    index.ts     │
-                    │  (entry point)  │
-                    └────────┬────────┘
-               ┌─────────────┴─────────────┐
-               ▼                           ▼
-        ┌─────────────┐           ┌────────────────┐
-        │  server.ts  │           │  checker.ts    │
-        │  HTTP + MPP │           │  cron + payout │
-        └──────┬──────┘           └───────┬────────┘
-               │                          │
-         ┌─────┴──────────────────────────┤
-         ▼                                ▼
-  ┌──────────────────┐           ┌──────────────────┐
-  │    flight.ts     │           │    store.ts      │
-  │  ADB API + cache │           │  Map + policies  │
-  └──────────┬───────┘           │    .json file    │
-             │                   └──────────────────┘
-             ▼                            ▲
-    ┌─────────────────┐          ┌────────────────┐
-    │  AeroDataBox    │          │   payout.ts    │──► Tempo Chain
-    │  RapidAPI       │          │  viem ERC-20   │     (pathUSD)
-    └─────────────────┘          └────────────────┘
-```
-
----
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: TailwindCSS
+- **Payment**: MPP (Machine Payments Protocol)
+- **Blockchain**: Tempo (EVM-compatible)
+- **Flight Data**: AeroDataBox via RapidAPI
+- **Storage**: JSON files (policies.json, audit.json)
 
 ## Setup
 
-### 1. Prerequisites
+### Prerequisites
 - Node.js >= 18
-- RapidAPI account (free) → [AeroDataBox API](https://rapidapi.com/aedbx-aedbx/api/aerodatabox)
+- RapidAPI account → [AeroDataBox API](https://rapidapi.com/aedbx-aedbx/api/aerodatabox)
 - Tempo testnet wallet with pathUSD → [Faucet](https://docs.tempo.xyz/quickstart/faucet)
 
-### 2. Install
+### Installation
+
 ```bash
 npm install
 ```
 
-### 3. Configure
+### Configuration
+
 ```bash
 cp .env.example .env
-# Fill in POOL_PRIVATE_KEY, POOL_ADDRESS, RAPIDAPI_KEY
+# Edit .env with your values:
+# - POOL_PRIVATE_KEY, POOL_ADDRESS (your Tempo wallet)
+# - RAPIDAPI_KEY (for flight data)
+# - ADMIN_PASSWORD (for admin panel)
 ```
 
-`POOL_ADDRESS` is the **public wallet address of the insurer pool**. In this demo, it should be the address derived from `POOL_PRIVATE_KEY` — the same wallet both **receives premiums** and **sends payouts**. You do **not** need to deploy the optional `FlightGuard.sol` contract before running the backend demo in this README.
-
-In practice:
-- `POOL_PRIVATE_KEY` = the private key of your Tempo wallet
-- `POOL_ADDRESS` = the public address of that same wallet
-- fund that wallet with enough `pathUSD` to cover payouts
-
-How to get `POOL_ADDRESS`:
-- If you already have the wallet in MetaMask, Rabby, or another EVM wallet, copy the wallet's **public address** and paste it into `POOL_ADDRESS`
-- If you generated the wallet elsewhere, use the public address paired with the private key you put in `POOL_PRIVATE_KEY`
-- `POOL_ADDRESS` must **match** `POOL_PRIVATE_KEY`; otherwise premiums may go to one wallet while payouts are attempted from another
-
-### 4. Fund the pool
-```bash
-npm run faucet          # funds POOL_ADDRESS from .env with 1M pathUSD (testnet only)
-```
-Requires [Foundry](https://getfoundry.sh). Or fund a specific address:
-```bash
-npm run faucet -- 0xYourAddress
-```
-
-### 5. Start
-```bash
-npm start
-```
-
----
-
-## Demo Script
-
-### Step 1 — Check pool is funded
-```bash
-curl http://localhost:3000/health
-```
-
-### Step 2 — Buy a policy (using mppx CLI)
-```bash
-# Install mppx CLI globally
-npm i -g mppx
-
-# Create a funded testnet account
-mppx account create
-
-# Buy insurance for a real flight
-mppx http://localhost:3000/insure \
-  --method POST \
-  --data '{"flightNumber":"LA3251","date":"2026-03-19","payoutAddress":"0xYourWalletHere"}'
-```
-
-### Step 3 — Check your policy
-```bash
-curl http://localhost:3000/policy/{policyId}
-```
-
-### Step 4 — Watch the checker
-Watch the terminal — every 5 minutes you'll see:
-```
-[CHECKER] Checking 1 active policy(ies)
-[CHECKER] Checking policy abc-123...
-[CHECKER]   Flight: LA3251 on 2026-03-19
-[CHECKER]   Status:  Departed
-[CHECKER]   Delay:   75 minutes
-[CHECKER]   → Delay 75min ≥ threshold 60min — TRIGGERING PAYOUT
-[PAYOUT] ✅ CONFIRMED in block 1234567
-```
-
-### Step 5 — Verify payout on explorer
-`https://explore.testnet.tempo.xyz/tx/{txHash}`
-
----
-
-## API Reference
-
-### `POST /insure` — Buy a policy
-**Payment required:** 1 pathUSD via MPP · **Rate limit:** 10 requests/60s per IP
-
-**Body:**
-```json
-{
-  "flightNumber": "LA3251",
-  "date": "2026-04-01",
-  "payoutAddress": "0xYourWalletAddress"
-}
-```
-
-**Validation:**
-- `flightNumber`: 2–8 alphanumeric characters (e.g. `LA3251`)
-- `date`: `YYYY-MM-DD`, valid calendar date, not in the past
-- `payoutAddress`: valid EVM address (`0x` + 40 hex chars)
-
-**Response `201`:**
-```json
-{
-  "policyId": "uuid-v4",
-  "flightNumber": "LA3251",
-  "date": "2026-04-01",
-  "scheduledDeparture": "2026-04-01T10:00:00Z",
-  "premium": "1.00",
-  "payoutAmount": "5.00",
-  "payoutAddress": "0x...",
-  "status": "active",
-  "message": "Policy active. Payout of 5.00 pathUSD fires automatically if departure delay exceeds 60 minutes."
-}
-```
-
-### `GET /policy/:id` — Check policy status
-```json
-{
-  "policy": {
-    "id": "uuid-v4",
-    "status": "active | paid_out | expired | cancelled",
-    "payoutTxHash": "0x... (set when paid out)",
-    "lastFlightStatus": "Departed",
-    "lastCheckedAt": 1711980000000
-  }
-}
-```
-
-### `GET /health` — Pool stats
-```json
-{
-  "status": "ok",
-  "pool": { "address": "0x...", "balance": "999.00 pathUSD" },
-  "policies": { "active": 3, "paid_out": 1, "expired": 2, "cancelled": 0 },
-  "config": { "premium": "1.00 pathUSD", "payoutMultiplier": 5, "delayThresholdMin": 60 }
-}
-```
-
----
-
-## Configuration
-
-| Variable | Default | Description |
-|---|---|---|
-| `POOL_PRIVATE_KEY` | **required** | Private key for the insurer pool wallet; used to send payouts |
-| `POOL_ADDRESS` | **required** | Public address of the same pool wallet; receives MPP premiums |
-| `RAPIDAPI_KEY` | **required** | AeroDataBox API key |
-| `TEMPO_RPC_URL` | testnet RPC | Tempo network RPC endpoint |
-| `CHAIN_ID` | `42431` | Tempo chain ID (42431 = testnet, 4217 = mainnet) |
-| `PATHUSD_ADDRESS` | `0x20c0...` | pathUSD token address |
-| `PORT` | `3000` | HTTP server port |
-| `PREMIUM_AMOUNT` | `1.00` | Policy premium in pathUSD |
-| `PAYOUT_MULTIPLIER` | `5` | Payout = premium × multiplier |
-| `DELAY_THRESHOLD_MIN` | `60` | Minimum delay (minutes) to trigger payout |
-| `CHECK_INTERVAL_MS` | `300000` | Checker poll interval (ms) — default 5 minutes |
-| `STORE_PATH` | `policies.json` | Path for persisting policies to disk |
-
-### Do I need to deploy a contract first?
-
-No — **not for the backend flow documented here**. The README demo works with a regular funded Tempo wallet acting as the insurer pool.
-
-The contract in `contracts/FlightGuard.sol` is an **optional on-chain layer** for a different architecture. Only deploy it if you want to use the Solidity contract flow or extend the demo beyond the current server-managed policy model.
-
----
-
-## Tests
+### Fund the Pool
 
 ```bash
-npm test                  # Run unit tests (vitest) — 28 tests
-npm run test:watch        # Watch mode
-npm run test:contracts    # Run Hardhat contract tests
-npm run typecheck         # TypeScript type check
+npm run faucet  # Testnet only - funds your pool wallet with pathUSD
 ```
 
-**Unit tests** (`test/flight.test.ts`, `test/store.test.ts`):
-- `getDepartureDelayMinutes` — 4 cases (no delays, with delay, empty array, undefined)
-- `hasFlightDeparted` — 6 cases across all `FlightStatus` values
-- `isFlightTerminal` — 7 cases across all `FlightStatus` values
-- `PolicyStore.create`, `markPaidOut`, `markExpired`, `getActive`, `countByStatus`, `cleanup`
+### Development
 
-**Contract tests** (`test/FlightGuard.test.js`) — Hardhat/Chai for `FlightGuard.sol`:
-- `fund()`, `registerPolicy()`, `triggerPayout()`, `expirePolicy()`, `withdraw()`
+```bash
+# Start Next.js dev server
+npm run dev
 
----
+# Start checker service (in another terminal)
+npm run checker
+```
 
-## Network
+Visit `http://localhost:3000`
 
-| Property | Testnet | Mainnet |
-|---|---|---|
-| Chain ID | 42431 | 4217 |
-| RPC | rpc.moderato.tempo.xyz | rpc.tempo.xyz |
-| Explorer | explore.testnet.tempo.xyz | explore.tempo.xyz |
-| pathUSD | `0x20c000...` | `0x20c000...` |
+### Production Build
 
----
+```bash
+npm run build
+npm run start  # Start Next.js production server
+npm run checker  # Start background checker (in another terminal/process)
+```
 
-## Underwriting Note
+## Deployment
 
-In this demo, the **pool wallet acts as the sole insurer**. The pool must be pre-funded with enough pathUSD to cover potential payouts. For production, underwriting could be:
-- A DAO liquidity pool (stakers earn premium yield)
-- A reinsurance API integration
-- Overcollateralized stablecoin vault
+### Render.io (Recommended)
 
----
+1. Push code to GitHub
+2. Connect repository to Render.io
+3. Render will detect `render.yaml` and create:
+   - Web service (Next.js app)
+   - Worker service (background checker)
+4. Configure environment variables in Render dashboard
+5. Deploy!
+
+The `render.yaml` file configures both services with shared persistent storage for JSON files.
+
+### Environment Variables
+
+Required for deployment:
+- `POOL_PRIVATE_KEY` - Private key for pool wallet
+- `POOL_ADDRESS` - Public address of pool wallet
+- `RAPIDAPI_KEY` - AeroDataBox API key
+- `ADMIN_PASSWORD` - Password for admin panel access
+- `PATHUSD_ADDRESS` - pathUSD token address (default: 0x20c000...)
+- `TEMPO_RPC_URL` - Tempo RPC endpoint
+- `CHAIN_ID` - 42431 (testnet) or 4217 (mainnet)
+
+## Usage
+
+### User Flow
+
+1. Visit homepage and click "Find Your Flight"
+2. Search for flights by date
+3. Click "Buy Insurance" on desired flight
+4. Enter payout wallet address
+5. Complete MPP payment (1 pathUSD)
+6. Policy is created and monitored automatically
+7. If flight is delayed 60+ minutes, receive 5 pathUSD automatically
+
+### Admin Flow
+
+1. Visit `/admin`
+2. Login with admin password
+3. View pool balance and statistics
+4. Monitor all policies
+5. Review audit logs
+
+## API Endpoints
+
+### Public Routes
+- `GET /api/health` - Pool status and statistics
+- `GET /api/flights?date=YYYY-MM-DD` - Search flights
+- `POST /api/insure` - Create insurance policy (MPP-gated)
+- `GET /api/policy/:id` - Get policy details
+
+### Admin Routes (authentication required)
+- `POST /api/admin/auth` - Admin login
+- `GET /api/admin/policies` - List all policies
+- `GET /api/admin/audit` - Get audit logs
 
 ## License
+
 MIT — OCTO INTELIGÊNCIA DE DADOS LTDA

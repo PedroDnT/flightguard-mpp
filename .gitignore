@@ -6,3 +6,5 @@ node_modules
 policies.json
 artifacts/
 cache/
+.next/
+audit.json
