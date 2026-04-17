@@ -20,7 +20,7 @@ FlightGuard is a parametric flight delay insurance platform built on the Tempo b
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: TailwindCSS
 - **Payment**: MPP (Machine Payments Protocol)

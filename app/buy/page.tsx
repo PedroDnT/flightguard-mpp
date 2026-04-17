@@ -124,11 +124,14 @@ function BuyPageContent() {
 
             <div className="space-y-3">
               <Link
-                href={`/policies/${policyId}`}
+                href="/policies"
                 className="block w-full text-center bg-accent hover:bg-accent-dark text-white font-semibold py-3 px-4 rounded-lg transition-colors"
               >
-                View Policy Details
+                Find Policy by ID
               </Link>
+              <p className="text-center text-sm text-gray-600">
+                Use the policy ID above in the lookup form on the policies page.
+              </p>
               <Link
                 href="/flights"
                 className="block w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-colors"
