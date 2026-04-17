@@ -3,10 +3,10 @@ import { store } from '@/src/store'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id
+    const { id } = await params
     console.log(`[API] GET /api/policy/${id}`)
 
     const policy = store.get(id)

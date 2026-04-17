@@ -1,1 +1,0 @@
-{"status":"ok","pool":{"balance":"0.00 pathUSD"},"policies":{"active":0,"paid_out":0,"expired":0,"cancelled":0},"network":{"chainId":42431,"rpc":"https://rpc.moderato.tempo.xyz"},"config":{"premium":"1.00 pathUSD","payoutMultiplier":5,"delayThresholdMin":60}}
