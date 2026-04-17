@@ -191,7 +191,7 @@ describe('normalizeFlightInfo (via fetchFlightInfo) — regression: arrival.actu
     const info = await fetchFlightInfo('REG002', '2026-03-22', 'test-key')
 
     expect(info?.departure.actualTime?.utc).toBe('2026-03-22T13:10:00Z')
-    expect(info?.departure.delays[0].minutes).toBe(70)
+    expect(info?.departure.delays?.[0]?.minutes).toBe(70)
   })
 
   it('returns null on 404', async () => {

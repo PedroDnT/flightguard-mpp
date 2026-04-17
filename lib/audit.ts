@@ -1,5 +1,4 @@
 import { writeFileSync, readFileSync, existsSync } from 'fs'
-import { writeFileSync, readFileSync, existsSync } from 'fs'
 
 const AUDIT_LOG_PATH = process.env.AUDIT_LOG_PATH ?? 'audit.json'
 
