@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAdminPassword } from '@/lib/auth'
 import { auditLogger } from '@/lib/audit'
 import { verifyAdminPassword, getClientIp } from '@/lib/auth'
 
