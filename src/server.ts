@@ -10,11 +10,11 @@ import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Mppx, tempo } from 'mppx/server'
-import { store } from './store.js'
-import { fetchFlightInfo, getScheduledDepartureUtc } from './flight.js'
-import { PayoutEngine } from './payout.js'
-import type { AlchemyClient } from './alchemy.js'
-import type { AppConfig, InsureRequest, InsureResponse, PolicyResponse } from './types.js'
+import { store } from './store'
+import { fetchFlightInfo, getScheduledDepartureUtc } from './flight'
+import { PayoutEngine } from './payout'
+import type { AlchemyClient } from './alchemy'
+import type { AppConfig, InsureRequest, InsureResponse, PolicyResponse } from './types'
 
 // Simple in-memory rate limiter: 10 req / 60s per IP
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>()
