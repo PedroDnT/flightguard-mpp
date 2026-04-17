@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function BuyPage() {
+function BuyPageContent() {
   const searchParams = useSearchParams()
   const [flightNumber, setFlightNumber] = useState('')
   const [date, setDate] = useState('')
@@ -264,5 +264,13 @@ export default function BuyPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function BuyPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BuyPageContent />
+    </Suspense>
   )
 }

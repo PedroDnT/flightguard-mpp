@@ -20,7 +20,7 @@ import {
   type PayoutRequest,
   type PayoutResult,
   type AppConfig,
-} from './types.js'
+} from './types'
 
 // ------------------------------------------------------------
 // Tempo chain definition (viem)

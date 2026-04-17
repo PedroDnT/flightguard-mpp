@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { searchFlights } from '@/lib/flight-search'
 
+// Mark as dynamic route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams

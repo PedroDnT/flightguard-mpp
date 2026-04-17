@@ -1,0 +1,15 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/admin/audit/route": "app/api/admin/audit/route.js",
+  "/api/admin/auth/route": "app/api/admin/auth/route.js",
+  "/api/admin/policies/route": "app/api/admin/policies/route.js",
+  "/api/insure/route": "app/api/insure/route.js",
+  "/buy/page": "app/buy/page.js",
+  "/api/policy/[id]/route": "app/api/policy/[id]/route.js",
+  "/flights/page": "app/flights/page.js",
+  "/api/health/route": "app/api/health/route.js",
+  "/page": "app/page.js",
+  "/policies/page": "app/policies/page.js",
+  "/api/flights/route": "app/api/flights/route.js"
+}

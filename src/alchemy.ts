@@ -12,7 +12,7 @@
 
 import { Mppx, tempo } from 'mppx/client'
 import { privateKeyToAccount } from 'viem/accounts'
-import type { AppConfig } from './types.js'
+import type { AppConfig } from './types'
 
 export class AlchemyClient {
   private mppx: ReturnType<typeof Mppx.create>

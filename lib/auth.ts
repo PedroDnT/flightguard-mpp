@@ -1,5 +1,3 @@
-import { compare } from 'bcryptjs'
-
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
 if (!ADMIN_PASSWORD) {
