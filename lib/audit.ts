@@ -1,4 +1,4 @@
-import { appendFile, existsSync, readFileSync, writeFileSync } from 'fs'
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs'
 
 const AUDIT_LOG_PATH = process.env.AUDIT_LOG_PATH ?? 'audit.json'
 
@@ -90,11 +90,11 @@ class AuditLogger {
 
     this.ensureAppendOnlyFormat()
 
-    appendFile(this.logPath, `${JSON.stringify(entry)}\n`, (err) => {
-      if (err) {
-        console.error(`[AUDIT] Failed to append log: ${err}`)
-      }
-    })
+    try {
+      appendFileSync(this.logPath, `${JSON.stringify(entry)}\n`)
+    } catch (err) {
+      console.error(`[AUDIT] Failed to append log: ${err}`)
+    }
 
     console.log(`[AUDIT] ${event}:`, JSON.stringify(details))
   }
