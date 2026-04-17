@@ -3,16 +3,16 @@
 // Polls active policies, triggers payouts automatically
 // ============================================================
 
-import { store } from './store.js'
+import { store } from './store'
 import {
   fetchFlightInfo,
   getDepartureDelayMinutes,
   hasFlightDeparted,
   isFlightTerminal,
-} from './flight.js'
-import { PayoutEngine, buildPayoutMemo } from './payout.js'
-import type { AlchemyClient } from './alchemy.js'
-import type { AppConfig, CheckResult } from './types.js'
+} from './flight'
+import { PayoutEngine, buildPayoutMemo } from './payout'
+import type { AlchemyClient } from './alchemy'
+import type { AppConfig, CheckResult } from './types'
 
 export class FlightChecker {
   private config: AppConfig

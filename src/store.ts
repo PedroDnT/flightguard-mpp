@@ -4,7 +4,7 @@
 
 import { randomUUID } from 'crypto'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
-import type { Policy, PolicyStatus, InsureRequest } from './types.js'
+import type { Policy, PolicyStatus, InsureRequest } from './types'
 
 const DEFAULT_STORE_PATH = process.env.STORE_PATH ?? 'policies.json'
 

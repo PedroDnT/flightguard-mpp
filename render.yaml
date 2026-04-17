@@ -1,0 +1,37 @@
+services:
+  # Web service - Next.js application
+  - type: web
+    name: flightguard-web
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Add other environment variables in Render dashboard:
+      # POOL_PRIVATE_KEY, POOL_ADDRESS, RAPIDAPI_KEY, ADMIN_PASSWORD, etc.
+    disk:
+      name: flightguard-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
+
+  # Background worker - Checker service
+  - type: worker
+    name: flightguard-checker
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run checker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Shares environment variables with web service
+    disk:
+      name: flightguard-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
