@@ -174,8 +174,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "bbe493d6942aa34606eecba37271703e",
-    "previewModeSigningKey": "7f9e2992fac191e8df281cc3b45848691034ea86749a02912159a1c3dd6618e4",
-    "previewModeEncryptionKey": "42aa737cea78c14a5c0265a68a525cd8f7ab6f927a289e6ed5ff080049824ab6"
+    "previewModeId": "",
+    "previewModeSigningKey": "",
+    "previewModeEncryptionKey": ""
   }
 }
