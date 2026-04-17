@@ -16,7 +16,7 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
 export function isAdminAuthenticated(request: Request): boolean {
   // Check for admin session cookie
   const cookies = request.headers.get('cookie') ?? ''
-  return cookies.includes('admin_session=true')
+  return cookies.includes('admin_session=') && cookies.match(/admin_session=([^;]+)/)?.[1] === process.env.ADMIN_SESSION_SECRET
 }
 
 export function getClientIp(request: Request): string {
