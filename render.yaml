@@ -2,7 +2,7 @@ services:
   # Web service - Next.js application
   - type: web
     name: flightguard-web
-    env: node∑
+    env: node
     region: oregon
     plan: free
     buildCommand: npm install && npm run build
