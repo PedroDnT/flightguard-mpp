@@ -1,21 +1,13 @@
 {
-    "configurations": [
-        
-        
-
-
-
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Typecheck (tsc --noEmit)",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run",
-                "typecheck"
-            ],
-            "cwd": "${workspaceFolder}",
-            "internalConsoleOptions": "neverOpen"
-        }
-    ]
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Typecheck (tsc --noEmit)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "typecheck"],
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
 }
