@@ -1,43 +1,10 @@
+This file previously contained captured local test-run output.
 
-> flightguard-mpp@0.1.0 test
-> vitest run
+The raw terminal log was removed because it included ANSI escape codes,
+absolute developer machine paths, and transient runtime data.
 
-
-[1m[46m RUN [49m[22m [36mv4.1.1 [39m[90m/Users/pedrotodescan/Documents/Dev/flightguard-mpp[39m
-
-[90mstdout[2m | test/store.test.ts
-[22m[39m[STORE] Loaded 1 policy(ies) from /Users/pedrotodescan/Documents/Dev/flightguard-mpp/policies.json
-
-[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.create[2m > [22m[2mcreates an active policy with correct fields
-[22m[39m[STORE] Policy created: 2c337948-cceb-45cc-bac3-61ecf25d869f
-[STORE]   Flight: LA3251 on 2026-04-01
-[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-[STORE]   Amount: 5.00 pathUSD
-
-[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.create[2m > [22m[2mcreates an active policy with correct fields
-[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
-
-[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.create[2m > [22m[2muppercases the flight number
-[22m[39m[STORE] Policy created: 8c764972-e1d6-4451-9c9f-2653a1fd9679
-[STORE]   Flight: LA3251 on 2026-04-01
-[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-[STORE]   Amount: 5.00 pathUSD
-
-[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.create[2m > [22m[2muppercases the flight number
-[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
-
-[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.create[2m > [22m[2mpolicy is retrievable via get()
-[22m[39m[STORE] Policy created: 5591f61e-c5a0-4e42-aae3-41765974f968
-[STORE]   Flight: LA3251 on 2026-04-01
-[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-[STORE]   Amount: 5.00 pathUSD
-
-[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.create[2m > [22m[2mpolicy is retrievable via get()
-[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
-
-[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.markPaidOut[2m > [22m[2msets status to paid_out and stores txHash
-[22m[39m[STORE] Policy created: 55c228b2-b678-4bce-9054-5a47c16526a7
-[STORE]   Flight: LA3251 on 2026-04-01
+Do not commit local test output artifacts. Store test evidence in CI logs
+or sanitized documentation instead, and ignore this file in version control.
 [STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 [STORE]   Amount: 5.00 pathUSD
 [STORE] Policy 55c228b2-b678-4bce-9054-5a47c16526a7 updated → status: paid_out
