@@ -2,7 +2,7 @@ services:
   # Web service - Next.js application
   - type: web
     name: flightguard-web
-    env: node
+    runtime: node
     region: oregon
     plan: free
     buildCommand: npm install && npm run build
@@ -16,13 +16,13 @@ services:
       # POOL_PRIVATE_KEY, POOL_ADDRESS, RAPIDAPI_KEY, ADMIN_PASSWORD, etc.
     disk:
       name: flightguard-data
-      mountPath: /opt/render/project/src
+      mountPath: /opt/render/project
       sizeGB: 1
 
   # Background worker - Checker service
   - type: worker
     name: flightguard-checker
-    env: node
+    runtime: node
     region: oregon
     plan: free
     buildCommand: npm install
