@@ -12,11 +12,13 @@ services:
         value: production
       - key: PORT
         value: 3000
+      - key: STORE_PATH
+        value: /opt/render/project/data/policies.json
       # Add other environment variables in Render dashboard:
       # POOL_PRIVATE_KEY, POOL_ADDRESS, RAPIDAPI_KEY, ADMIN_PASSWORD, etc.
     disk:
-      name: flightguard-data
-      mountPath: /opt/render/project
+      name: flightguard-web-data
+      mountPath: /opt/render/project/data
       sizeGB: 1
 
   # Background worker - Checker service
@@ -30,8 +32,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: STORE_PATH
+        value: /opt/render/project/checker-data/policies.json
       # Shares environment variables with web service
     disk:
-      name: flightguard-data
-      mountPath: /opt/render/project/src
+      name: flightguard-checker-data
+      mountPath: /opt/render/project/checker-data
       sizeGB: 1
