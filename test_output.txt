@@ -1,0 +1,526 @@
+This file previously contained captured local test-run output.
+
+The raw terminal log was removed because it included ANSI escape codes,
+absolute developer machine paths, and transient runtime data.
+
+Do not commit local test output artifacts. Store test evidence in CI logs
+or sanitized documentation instead, and ignore this file in version control.
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy 55c228b2-b678-4bce-9054-5a47c16526a7 updated → status: paid_out
+
+[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.markPaidOut[2m > [22m[2msets status to paid_out and stores txHash
+[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+
+[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.markExpired[2m > [22m[2msets status to expired
+[22m[39m[STORE] Policy created: 23183329-dc37-4352-9f10-323f2f4a18de
+[STORE]   Flight: LA3251 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy 23183329-dc37-4352-9f10-323f2f4a18de updated → status: expired
+
+[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.markExpired[2m > [22m[2msets status to expired
+[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+
+[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.getActive[2m > [22m[2mreturns only active policies
+[22m[39m[STORE] Policy created: 7b5dfc1a-4f6e-4cc5-b669-0eecd7e4013f
+[STORE]   Flight: LA3251 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy created: 8b093354-b406-42dc-b2df-5150c0fa075f
+[STORE]   Flight: LA0002 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy 8b093354-b406-42dc-b2df-5150c0fa075f updated → status: expired
+
+[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.getActive[2m > [22m[2mreturns only active policies
+[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+
+[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.countByStatus[2m > [22m[2mcounts correctly across statuses
+[22m[39m[STORE] Policy created: d9dec8e0-9a7d-439a-8b30-72d558a24972
+[STORE]   Flight: LA3251 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy created: 373fcf62-20ec-4c0d-a4b6-5cf9323e09b3
+[STORE]   Flight: LA0002 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy 373fcf62-20ec-4c0d-a4b6-5cf9323e09b3 updated → status: expired
+
+[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.countByStatus[2m > [22m[2mcounts correctly across statuses
+[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+
+[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.cleanup[2m > [22m[2mremoves expired policies older than TTL
+[22m[39m[STORE] Policy created: 1b671623-6379-4fca-8251-24945df03175
+[STORE]   Flight: LA3251 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy 1b671623-6379-4fca-8251-24945df03175 updated → status: expired
+[STORE] Cleaned up 1 terminal policy(ies) older than 7d
+
+[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.cleanup[2m > [22m[2mremoves expired policies older than TTL
+[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+
+[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.cleanup[2m > [22m[2mdoes not remove recently expired policies
+[22m[39m[STORE] Policy created: 7c37d156-8979-4ecc-8ed3-5aecf6f0256f
+[STORE]   Flight: LA3251 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+[STORE] Policy 7c37d156-8979-4ecc-8ed3-5aecf6f0256f updated → status: expired
+
+[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.cleanup[2m > [22m[2mdoes not remove recently expired policies
+[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+
+[90mstdout[2m | test/flight.test.ts[2m > [22m[2mnormalizeFlightInfo (via fetchFlightInfo) — regression: arrival.actualTime[2m > [22m[2muses arrival.actualTime not arrival.scheduledTime
+[22m[39m[FLIGHT] Fetching flight REG001 on 2026-03-21
+[FLIGHT] URL: https://aerodatabox.p.rapidapi.com/flights/number/REG001/2026-03-21
+
+[90mstdout[2m | test/store.test.ts[2m > [22m[2mPolicyStore.cleanup[2m > [22m[2mdoes not remove active policies
+[22m[39m[STORE] Policy created: b2edc01a-c11f-4234-8cbe-1093fc10f27a
+[STORE]   Flight: LA3251 on 2026-04-01
+[STORE]   Payout to: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[STORE]   Amount: 5.00 pathUSD
+
+[90mstderr[2m | test/store.test.ts[2m > [22m[2mPolicyStore.cleanup[2m > [22m[2mdoes not remove active policies
+[22m[39m[STORE] Failed to save to disk: Error: ENOTDIR: not a directory, open '/dev/null/nonexistent-test-store.json'
+
+ [32m✓[39m test/evaluatePolicy.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+[90mstdout[2m | test/flight.test.ts[2m > [22m[2mnormalizeFlightInfo (via fetchFlightInfo) — regression: arrival.actualTime[2m > [22m[2mnormalizes departure actualTime correctly
+[22m[39m[FLIGHT] Fetching flight REG002 on 2026-03-22
+[FLIGHT] URL: https://aerodatabox.p.rapidapi.com/flights/number/REG002/2026-03-22
+
+[90mstdout[2m | test/flight.test.ts[2m > [22m[2mnormalizeFlightInfo (via fetchFlightInfo) — regression: arrival.actualTime[2m > [22m[2mreturns null on 404
+[22m[39m[FLIGHT] Fetching flight XX404 on 2026-03-21
+[FLIGHT] URL: https://aerodatabox.p.rapidapi.com/flights/number/XX404/2026-03-21
+
+[90mstdout[2m | test/flight.test.ts[2m > [22m[2mnormalizeFlightInfo (via fetchFlightInfo) — regression: arrival.actualTime[2m > [22m[2mreturns null on 404
+[22m[39m[FLIGHT] Flight XX404 not found (404)
+
+[90mstdout[2m | test/checker.test.ts
+[22m[39m[STORE] Loaded 1 policy(ies) from /Users/pedrotodescan/Documents/Dev/flightguard-mpp/policies.json
+
+ [32m✓[39m test/flight.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m test/store.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mskips fetch when there are no active policies
+[22m[39m[CHECKER] No active policies to check
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 1: marks policy expired when flight is cancelled
+[22m[39m[STORE] Policy created: dfd8dbbc-20ce-49a8-8c7e-c800783278da
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.737Z
+[CHECKER] Checking policy dfd8dbbc-20ce-49a8-8c7e-c800783278da
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 1: marks policy expired when flight is cancelled
+[22m[39m[CHECKER]   Status: Cancelled
+[CHECKER]   Delay: 0 minutes
+[STORE] Policy dfd8dbbc-20ce-49a8-8c7e-c800783278da updated → status: active
+[CHECKER]   → flight cancelled — marking policy expired
+[STORE] Policy dfd8dbbc-20ce-49a8-8c7e-c800783278da updated → status: expired
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 1: marks policy expired when flight is cancelled
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 1
+[CHECKER]   No action: 0
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay equals threshold (60 min)
+[22m[39m[STORE] Policy created: ce1e42aa-a90c-40b1-bb2f-cd2a10be1fb6
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.739Z
+[CHECKER] Checking policy ce1e42aa-a90c-40b1-bb2f-cd2a10be1fb6
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay equals threshold (60 min)
+[22m[39m[CHECKER]   Status: Departed
+[CHECKER]   Delay: 60 minutes
+[STORE] Policy ce1e42aa-a90c-40b1-bb2f-cd2a10be1fb6 updated → status: active
+[CHECKER]   → Delay 60min ≥ threshold 60min — TRIGGERING PAYOUT
+[STORE] Policy ce1e42aa-a90c-40b1-bb2f-cd2a10be1fb6 updated → status: paid_out
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay equals threshold (60 min)
+[22m[39m[STORE] Policy ce1e42aa-a90c-40b1-bb2f-cd2a10be1fb6 updated → status: paid_out
+[CHECKER]   PAYOUT SENT: 0xabc
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay equals threshold (60 min)
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 1
+[CHECKER]   Policies expired: 0
+[CHECKER]   No action: 0
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay exceeds threshold (65 min)
+[22m[39m[STORE] Policy created: 41405e8b-d3a0-411c-b44d-e9440b856fae
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.739Z
+[CHECKER] Checking policy 41405e8b-d3a0-411c-b44d-e9440b856fae
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay exceeds threshold (65 min)
+[22m[39m[CHECKER]   Status: Departed
+[CHECKER]   Delay: 65 minutes
+[STORE] Policy 41405e8b-d3a0-411c-b44d-e9440b856fae updated → status: active
+[CHECKER]   → Delay 65min ≥ threshold 60min — TRIGGERING PAYOUT
+[STORE] Policy 41405e8b-d3a0-411c-b44d-e9440b856fae updated → status: paid_out
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay exceeds threshold (65 min)
+[22m[39m[STORE] Policy 41405e8b-d3a0-411c-b44d-e9440b856fae updated → status: paid_out
+[CHECKER]   PAYOUT SENT: 0xdef
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: triggers payout when delay exceeds threshold (65 min)
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 1
+[CHECKER]   Policies expired: 0
+[CHECKER]   No action: 0
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: does NOT trigger payout when delay is below threshold (59 min)
+[22m[39m[STORE] Policy created: c9c86204-7e4b-4fcb-8aaa-e74173968b85
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.740Z
+[CHECKER] Checking policy c9c86204-7e4b-4fcb-8aaa-e74173968b85
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: does NOT trigger payout when delay is below threshold (59 min)
+[22m[39m[CHECKER]   Status: Departed
+[CHECKER]   Delay: 59 minutes
+[STORE] Policy c9c86204-7e4b-4fcb-8aaa-e74173968b85 updated → status: active
+[CHECKER]   → No action (flight still in progress)
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 2: does NOT trigger payout when delay is below threshold (59 min)
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 0
+[CHECKER]   No action: 1
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 3: marks expired when flight landed with small delay
+[22m[39m[STORE] Policy created: c73ad4d5-c467-4953-9024-b74375aee99d
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.740Z
+[CHECKER] Checking policy c73ad4d5-c467-4953-9024-b74375aee99d
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 3: marks expired when flight landed with small delay
+[22m[39m[CHECKER]   Status: Landed
+[CHECKER]   Delay: 10 minutes
+[STORE] Policy c73ad4d5-c467-4953-9024-b74375aee99d updated → status: active
+[CHECKER]   → terminal flight below threshold — marking policy expired
+[STORE] Policy c73ad4d5-c467-4953-9024-b74375aee99d updated → status: expired
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 3: marks expired when flight landed with small delay
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 1
+[CHECKER]   No action: 0
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 3: marks expired when flight arrived with no delay
+[22m[39m[STORE] Policy created: dea89ed3-cbb3-4b64-b090-e42f641bc612
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.741Z
+[CHECKER] Checking policy dea89ed3-cbb3-4b64-b090-e42f641bc612
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 3: marks expired when flight arrived with no delay
+[22m[39m[CHECKER]   Status: Arrived
+[CHECKER]   Delay: 0 minutes
+[STORE] Policy dea89ed3-cbb3-4b64-b090-e42f641bc612 updated → status: active
+[CHECKER]   → terminal flight below threshold — marking policy expired
+[STORE] Policy dea89ed3-cbb3-4b64-b090-e42f641bc612 updated → status: expired
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 3: marks expired when flight arrived with no delay
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 1
+[CHECKER]   No action: 0
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 4: no action when flight is still scheduled
+[22m[39m[STORE] Policy created: 75ce48f7-dd32-45ee-9381-1fa909043914
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.741Z
+[CHECKER] Checking policy 75ce48f7-dd32-45ee-9381-1fa909043914
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 4: no action when flight is still scheduled
+[22m[39m[CHECKER]   Status: Scheduled
+[CHECKER]   Delay: 0 minutes
+[STORE] Policy 75ce48f7-dd32-45ee-9381-1fa909043914 updated → status: active
+[CHECKER]   → No action (flight still in progress)
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 4: no action when flight is still scheduled
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 0
+[CHECKER]   No action: 1
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 4: no action when flight is enroute with sub-threshold delay
+[22m[39m[STORE] Policy created: 0becd373-3119-4403-802b-55afe346ecde
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.741Z
+[CHECKER] Checking policy 0becd373-3119-4403-802b-55afe346ecde
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 4: no action when flight is enroute with sub-threshold delay
+[22m[39m[CHECKER]   Status: EnRoute
+[CHECKER]   Delay: 30 minutes
+[STORE] Policy 0becd373-3119-4403-802b-55afe346ecde updated → status: active
+[CHECKER]   → No action (flight still in progress)
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mcase 4: no action when flight is enroute with sub-threshold delay
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 0
+[CHECKER]   No action: 1
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mrolls back status to active when payout fails
+[22m[39m[STORE] Policy created: 4276913e-e07d-4c45-9529-3adde592fbfa
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.742Z
+[CHECKER] Checking policy 4276913e-e07d-4c45-9529-3adde592fbfa
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mrolls back status to active when payout fails
+[22m[39m[CHECKER]   Status: Departed
+[CHECKER]   Delay: 65 minutes
+[STORE] Policy 4276913e-e07d-4c45-9529-3adde592fbfa updated → status: active
+[CHECKER]   → Delay 65min ≥ threshold 60min — TRIGGERING PAYOUT
+[STORE] Policy 4276913e-e07d-4c45-9529-3adde592fbfa updated → status: paid_out
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mrolls back status to active when payout fails
+[22m[39m[STORE] Policy 4276913e-e07d-4c45-9529-3adde592fbfa updated → status: active
+
+[90mstderr[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mrolls back status to active when payout fails
+[22m[39m[CHECKER]   PAYOUT FAILED: network error
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mrolls back status to active when payout fails
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 0
+[CHECKER]   No action: 1
+[CHECKER] ─────────────────────────────────────
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mtakes no action when fetchFlightInfo returns null
+[22m[39m[STORE] Policy created: 31307ea0-0d05-4ae7-83bc-84df9cc409bc
+[STORE]   Flight: AA123 on 2026-03-24
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[CHECKER] ─────────────────────────────────────
+[CHECKER] Checking 1 active policy(ies)
+[CHECKER] Time: 2026-04-20T19:30:10.742Z
+[CHECKER] Checking policy 31307ea0-0d05-4ae7-83bc-84df9cc409bc
+[CHECKER]   Flight: AA123 on 2026-03-24
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mtakes no action when fetchFlightInfo returns null
+[22m[39m[CHECKER]   No flight data available — skipping
+[STORE] Policy 31307ea0-0d05-4ae7-83bc-84df9cc409bc updated → status: active
+
+[90mstdout[2m | test/checker.test.ts[2m > [22m[2mFlightChecker.runCycle[2m > [22m[2mtakes no action when fetchFlightInfo returns null
+[22m[39m[CHECKER] Cycle complete
+[CHECKER]   Payouts triggered: 0
+[CHECKER]   Policies expired: 0
+[CHECKER]   No action: 1
+[CHECKER] ─────────────────────────────────────
+
+ [32m✓[39m test/checker.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | test/server.test.ts
+[22m[39m[STORE] Loaded 1 policy(ies) from /Users/pedrotodescan/Documents/Dev/flightguard-mpp/policies.json
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mGET /health[2m > [22m[2mreturns 200 with pool address, balance, and policy counts
+[22m[39m[SERVER] GET /health
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mGET /policy/:id[2m > [22m[2mreturns 404 for an unknown policy id
+[22m[39m[SERVER] GET /policy/does-not-exist
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mGET /policy/:id[2m > [22m[2mreturns 200 with the policy when it exists
+[22m[39m[STORE] Policy created: acb3b96a-0ca0-4b4a-bf7b-66c4ece35202
+[STORE]   Flight: LA3251 on 2026-04-01
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mGET /policy/:id[2m > [22m[2mreturns 200 with the policy when it exists
+[22m[39m[SERVER] GET /policy/acb3b96a-0ca0-4b4a-bf7b-66c4ece35202
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 when flightNumber is missing
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 when date is missing
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 when payoutAddress is missing
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 for invalid flight number format
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 for wrong date format
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 for a past date
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 for an invalid EVM address
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — input validation[2m > [22m[2mreturns 400 for invalid JSON body
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — flight lookup[2m > [22m[2mreturns 404 when flight does not exist
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — flight lookup[2m > [22m[2mreturns 404 when flight does not exist
+[22m[39m[SERVER] Insuring flight XX999 on 2026-12-31 → 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — flight lookup[2m > [22m[2mreturns 503 when flight API throws
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — flight lookup[2m > [22m[2mreturns 503 when flight API throws
+[22m[39m[SERVER] Insuring flight AA123 on 2026-12-31 → 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+[90mstderr[2m | test/server.test.ts[2m > [22m[2mPOST /insure — flight lookup[2m > [22m[2mreturns 503 when flight API throws
+[22m[39m[SERVER] Flight lookup failed: API unavailable
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — happy path[2m > [22m[2mcreates a policy and returns 201
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — happy path[2m > [22m[2mcreates a policy and returns 201
+[22m[39m[SERVER] Insuring flight aa123 on 2026-12-31 → 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — happy path[2m > [22m[2mcreates a policy and returns 201
+[22m[39m[STORE] Policy created: 32ee8495-2566-4fa7-ad9e-593832187c42
+[STORE]   Flight: AA123 on 2026-12-31
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[SERVER] Policy issued: 32ee8495-2566-4fa7-ad9e-593832187c42
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — happy path[2m > [22m[2mcalculates payoutAmount as premium × multiplier
+[22m[39m[SERVER] POST /insure
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — happy path[2m > [22m[2mcalculates payoutAmount as premium × multiplier
+[22m[39m[SERVER] Insuring flight AA123 on 2026-12-31 → 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+[90mstdout[2m | test/server.test.ts[2m > [22m[2mPOST /insure — happy path[2m > [22m[2mcalculates payoutAmount as premium × multiplier
+[22m[39m[STORE] Policy created: b52626d7-38d7-4864-92c7-7ba62458cf51
+[STORE]   Flight: AA123 on 2026-12-31
+[STORE]   Payout to: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[STORE]   Amount: 5.00 pathUSD
+[SERVER] Policy issued: b52626d7-38d7-4864-92c7-7ba62458cf51
+
+ [32m✓[39m test/server.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstderr[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.getPoolBalance[2m > [22m[2mreturns "0.00" when readContract throws
+[22m[39m[PAYOUT] Failed to fetch pool balance: RPC error
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure without calling transfer when pool is insufficient
+[22m[39m[PAYOUT] Initiating payout
+[PAYOUT] To: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[PAYOUT] Amount: 5.00 pathUSD
+[PAYOUT] Amount in units: 5000000
+
+[90mstderr[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure without calling transfer when pool is insufficient
+[22m[39m[PAYOUT] ERROR: Insufficient pool balance: have 1, need 5.00
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure without calling transfer when pool is insufficient
+[22m[39m[PAYOUT] Pool balance: 1 pathUSD
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns success with txHash when transfer confirms
+[22m[39m[PAYOUT] Initiating payout
+[PAYOUT] To: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[PAYOUT] Amount: 5.00 pathUSD
+[PAYOUT] Memo: flightguard:p1:AA123:2026-03-24
+[PAYOUT] Amount in units: 5000000
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns success with txHash when transfer confirms
+[22m[39m[PAYOUT] Pool balance: 100 pathUSD
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns success with txHash when transfer confirms
+[22m[39m[PAYOUT] Transaction submitted: 0xdeadbeef
+[PAYOUT] Explorer: https://explore.testnet.tempo.xyz/tx/0xdeadbeef
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns success with txHash when transfer confirms
+[22m[39m[PAYOUT] CONFIRMED in block 100
+[PAYOUT] Gas used: 21000
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure when transaction reverts on-chain
+[22m[39m[PAYOUT] Initiating payout
+[PAYOUT] To: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[PAYOUT] Amount: 5.00 pathUSD
+[PAYOUT] Amount in units: 5000000
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure when transaction reverts on-chain
+[22m[39m[PAYOUT] Pool balance: 100 pathUSD
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure when transaction reverts on-chain
+[22m[39m[PAYOUT] Transaction submitted: 0xdeadbeef
+[PAYOUT] Explorer: https://explore.testnet.tempo.xyz/tx/0xdeadbeef
+
+[90mstderr[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure when transaction reverts on-chain
+[22m[39m[PAYOUT] REVERTED: Transaction reverted in block 100
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure when writeContract throws
+[22m[39m[PAYOUT] Initiating payout
+[PAYOUT] To: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+[PAYOUT] Amount: 5.00 pathUSD
+[PAYOUT] Amount in units: 5000000
+
+[90mstdout[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure when writeContract throws
+[22m[39m[PAYOUT] Pool balance: 100 pathUSD
+
+[90mstderr[2m | test/payout.test.ts[2m > [22m[2mPayoutEngine.sendPayout[2m > [22m[2mreturns failure when writeContract throws
+[22m[39m[PAYOUT] ERROR: gas estimation failed
+
+ [32m✓[39m test/payout.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m76 passed[39m[22m[90m (76)[39m
+[2m   Start at [22m 16:30:10
+[2m   Duration [22m 421.55s[2m (transform 208ms, setup 0ms, import 421.72s, tests 42ms, environment 0ms)[22m
+
