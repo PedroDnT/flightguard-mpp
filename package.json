@@ -1,6 +1,6 @@
 {
   "name": "flightguard-mpp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Parametric flight delay insurance on Tempo using MPP micropayments",
   "main": "dist/index.js",
   "scripts": {
