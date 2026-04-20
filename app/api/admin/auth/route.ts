@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAdminPassword } from '@/lib/auth'
 import { auditLogger } from '@/lib/audit'
-import { getClientIp } from '@/lib/auth'
+import { verifyAdminPassword, getClientIp } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {

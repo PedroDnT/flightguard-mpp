@@ -1,4 +1,4 @@
-import { writeFileSync, readFileSync, existsSync } from 'fs'
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs'
 
 const AUDIT_LOG_PATH = process.env.AUDIT_LOG_PATH ?? 'audit.json'
 
@@ -25,9 +25,45 @@ export type AuditEvent =
 
 class AuditLogger {
   private logPath: string
+  private formatChecked = false
 
   constructor(logPath: string = AUDIT_LOG_PATH) {
     this.logPath = logPath
+  }
+
+  private parseLogs(raw: string): AuditLogEntry[] {
+    const trimmed = raw.trim()
+    if (!trimmed) return []
+
+    // Backward compatibility: older format stored a JSON array.
+    if (trimmed.startsWith('[')) {
+      return JSON.parse(trimmed) as AuditLogEntry[]
+    }
+
+    // New format: append-only JSONL (one JSON object per line).
+    return trimmed
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as AuditLogEntry)
+  }
+
+  private ensureAppendOnlyFormat(): void {
+    if (this.formatChecked) return
+    this.formatChecked = true
+
+    try {
+      if (!existsSync(this.logPath)) return
+
+      const raw = readFileSync(this.logPath, 'utf-8').trim()
+      if (!raw || !raw.startsWith('[')) return
+
+      const logs = JSON.parse(raw) as AuditLogEntry[]
+      const jsonl = logs.map((entry) => JSON.stringify(entry)).join('\n')
+      writeFileSync(this.logPath, jsonl ? `${jsonl}\n` : '')
+    } catch (err) {
+      console.error(`[AUDIT] Failed to migrate audit log format: ${err}`)
+    }
   }
 
   private loadLogs(): AuditLogEntry[] {
@@ -36,18 +72,10 @@ class AuditLogger {
         return []
       }
       const raw = readFileSync(this.logPath, 'utf-8')
-      return JSON.parse(raw) as AuditLogEntry[]
+      return this.parseLogs(raw)
     } catch (err) {
       console.error(`[AUDIT] Failed to load logs: ${err}`)
       return []
-    }
-  }
-
-  private saveLogs(logs: AuditLogEntry[]): void {
-    try {
-      writeFileSync(this.logPath, JSON.stringify(logs, null, 2))
-    } catch (err) {
-      console.error(`[AUDIT] Failed to save logs: ${err}`)
     }
   }
 
@@ -60,9 +88,13 @@ class AuditLogger {
       userAgent,
     }
 
-    const logs = this.loadLogs()
-    logs.push(entry)
-    this.saveLogs(logs)
+    this.ensureAppendOnlyFormat()
+
+    try {
+      appendFileSync(this.logPath, `${JSON.stringify(entry)}\n`)
+    } catch (err) {
+      console.error(`[AUDIT] Failed to append log: ${err}`)
+    }
 
     console.log(`[AUDIT] ${event}:`, JSON.stringify(details))
   }
