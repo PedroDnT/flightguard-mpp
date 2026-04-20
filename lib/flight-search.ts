@@ -1,5 +1,4 @@
 import { AERODATABOX_BASE_URL } from "@/src/config/types";
-import type { FlightInfo } from "@/src/integrations/aerodatabox";
 
 const CACHE_DURATION_MS = 4 * 60 * 1000; // 4 minutes
 
