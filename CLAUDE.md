@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FlightGuard MPP is a parametric flight delay insurance backend on the Tempo blockchain. Users pay a 1 pathUSD premium via the Machine Payments Protocol (MPP), and if their flight departs with a delay ≥ 60 minutes, 5 pathUSD is automatically sent to their wallet. No claims process — data triggers payment.
+FlightGuard MPP is a parametric flight delay insurance app on the Tempo blockchain. Users pay a 1 pathUSD premium via the Machine Payments Protocol (MPP), and if their flight departs with a delay ≥ 60 minutes, 5 pathUSD is automatically sent to their wallet. No claims process — data triggers payment.
 
 ## Commands
 
 ```bash
-npm run dev              # Start with hot reload (tsx watch)
-npm start                # Start server (tsx)
-npm run build            # Compile TypeScript (tsc)
+npm run dev              # Start Next.js dev server
+npm run build            # Build Next.js app
+npm start                # Start Next.js production server
+npm run checker          # Start background flight checker worker (tsx index.ts)
 npm run typecheck        # Type-check without emitting (tsc --noEmit)
 npm test                 # Run unit tests (vitest)
 npm run test:watch       # Watch mode tests
@@ -27,17 +28,17 @@ Run a single test by name: `npx vitest run -t "creates a policy"`
 
 ## Architecture
 
-**Entry point:** `index.ts` — loads env config, boots the Hono HTTP server and the FlightChecker cron loop, handles graceful shutdown (SIGTERM/SIGINT).
+**Primary web app:** Next.js App Router (`app/`) with API routes under `app/api/*`.
 
 **Two runtime processes run concurrently:**
 
-1. **HTTP Server** (`src/server.ts`) — Hono app with three routes:
-   - `POST /insure` — MPP-gated (mppx/server); charges premium, validates input, calls AeroDataBox, creates policy
-   - `GET /policy/:id` — free lookup
-   - `GET /health` — pool balance + policy stats
+1. **API Routes** (`app/api/*`) — Next.js route handlers:
+   - `POST /api/insure` — MPP-gated (mppx/server); charges premium, validates input, calls AeroDataBox, creates policy
+   - `GET /api/policy/:id` — free lookup
+   - `GET /api/health` — pool balance + policy stats
    - Includes IP rate limiting (10 req/60s) and 1KB body limit
 
-2. **Flight Checker** (`src/checker.ts`) — `setInterval` loop (default 5min) that:
+2. **Flight Checker Worker** (`index.ts` + `src/checker.ts`) — `setInterval` loop (default 5min) that:
    - Runs `Promise.allSettled` across all active policies in parallel
    - Triggers payout if departed + delay ≥ threshold
    - Pre-locks policy status to `paid_out` before sending tx to prevent double-payout; rolls back to `active` on failure
@@ -58,7 +59,7 @@ Run a single test by name: `npx vitest run -t "creates a policy"`
 - **Double-payout prevention:** `checker.ts` sets status to `paid_out` *before* the blockchain tx, then rolls back to `active` if the tx fails. This prevents concurrent checker cycles from paying the same policy twice.
 - **pathUSD uses 6 decimals** (like USDC). The constant `PATHUSD_DECIMALS` in `types.ts` is used by `parseUnits`/`formatUnits` calls in payout.ts.
 - **Tempo chain definitions** are built at runtime via viem's `defineChain` in `payout.ts`, using config-provided RPC URL and chain ID. Testnet = 42431, Mainnet = 4217.
-- **Static files** are served from `public/` via Hono's `serveStatic` middleware (the insurance purchase web UI).
+- **Web UI** is rendered by Next.js pages (`app/`) with static assets in `public/`.
 
 ## Testing
 
