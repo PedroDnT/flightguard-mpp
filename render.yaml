@@ -1,41 +1,39 @@
 services:
-  # Web service - Next.js application
+  # Single web service running both Next.js and the flight checker worker.
+  # Co-locating both processes on one service lets them share the same
+  # persistent disk (and therefore the same policies.json file).
   - type: web
-    name: flightguard-web
+    name: flightguard
     runtime: node
     region: oregon
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: npm ci && npm run build
+    startCommand: bash scripts/start-all.sh
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
       - key: STORE_PATH
-        value: /opt/render/project/data/policies.json
-      # Add other environment variables in Render dashboard:
-      # POOL_PRIVATE_KEY, POOL_ADDRESS, RAPIDAPI_KEY, ADMIN_PASSWORD, etc.
+        value: /data/policies.json
+      - key: AUDIT_PATH
+        value: /data/audit.json
+      # Set these in the Render dashboard → Environment:
+      # POOL_PRIVATE_KEY   (required) pool wallet private key
+      # POOL_ADDRESS       (required) pool wallet public address
+      # RAPIDAPI_KEY       (required) AeroDataBox API key via RapidAPI
+      # ADMIN_PASSWORD     (required) admin panel password
+      # CHAIN_ID           42431 = testnet / 4217 = mainnet
+      # TEMPO_RPC_URL      override default Tempo RPC
+      # PATHUSD_ADDRESS    pathUSD token address
+      # PREMIUM_AMOUNT     default: 1.00
+      # PAYOUT_MULTIPLIER  default: 5
+      # DELAY_THRESHOLD_MIN default: 60
+      # CHECK_INTERVAL_MS  default: 300000 (5 min)
+      # ALCHEMY_SERVICE_URL optional Alchemy MPP service
+      # ALCHEMY_API_KEY    optional Alchemy API key
     disk:
-      name: flightguard-web-data
-      mountPath: /opt/render/project/data
-      sizeGB: 1
-
-  # Background worker - Checker service
-  - type: worker
-    name: flightguard-checker
-    runtime: node
-    region: oregon
-    plan: free
-    buildCommand: npm install
-    startCommand: npm run checker
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: STORE_PATH
-        value: /opt/render/project/checker-data/policies.json
-      # Shares environment variables with web service
-    disk:
-      name: flightguard-checker-data
-      mountPath: /opt/render/project/checker-data
+      name: flightguard-data
+      mountPath: /data
       sizeGB: 1
