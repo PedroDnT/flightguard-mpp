@@ -206,6 +206,54 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
     })
   })
 
+  // ----------------------------------------------------------------
+  // POST /demo/policy  — Create a synthetic policy (no MPP, no real flight)
+  // ----------------------------------------------------------------
+  app.post('/demo/policy', async (c) => {
+    const departureTime = new Date(Date.now() + 2 * 60 * 1000) // departs in 2 min
+    const date = departureTime.toISOString().slice(0, 10)
+    const payoutAmount = (parseFloat(config.premiumAmount) * config.payoutMultiplier).toFixed(2)
+
+    const policy = store.create({
+      req: {
+        flightNumber: 'DEMO01',
+        date,
+        payoutAddress: '0x000000000000000000000000000000000000dEaD',
+      },
+      premiumAmount: config.premiumAmount,
+      payoutAmount,
+      scheduledDeparture: departureTime.toISOString(),
+    })
+
+    console.log(`[DEMO] Policy created: ${policy.id}`)
+    return c.json({ policyId: policy.id, policy }, 201)
+  })
+
+  // ----------------------------------------------------------------
+  // POST /demo/policy/:id/resolve  — Resolve demo policy (delayed or ontime)
+  // ----------------------------------------------------------------
+  app.post('/demo/policy/:id/resolve', async (c) => {
+    const id = c.req.param('id')
+    const policy = store.get(id)
+    if (!policy) return c.json({ error: 'Policy not found' }, 404)
+
+    let body: { scenario?: string } = {}
+    try { body = await c.req.json() } catch {}
+
+    if (body.scenario === 'ontime') {
+      store.markExpired(id)
+      console.log(`[DEMO] Policy ${id} resolved: on-time (expired)`)
+    } else {
+      const fakeTxHash = '0x' + Array.from({ length: 64 }, () =>
+        Math.floor(Math.random() * 16).toString(16),
+      ).join('')
+      store.markPaidOut(id, fakeTxHash)
+      console.log(`[DEMO] Policy ${id} resolved: delayed (paid_out) tx=${fakeTxHash}`)
+    }
+
+    return c.json({ policy: store.get(id) })
+  })
+
   // Serve the purchase UI from public/ — registered last so API routes take priority
   app.use('/*', serveStatic({ root: './public' }))
 

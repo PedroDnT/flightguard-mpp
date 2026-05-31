@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlightGuard — Policy Lifecycle Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6366f1;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 64px;
+    }
+
+    header {
+      max-width: 640px;
+      margin: 0 auto 28px;
+      text-align: center;
+    }
+    header h1 { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+    header p  { color: var(--muted); margin-top: 6px; }
+
+    .container { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Flight card */
+    .flight-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .flight-card h2 { font-size: 1rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+    .flight-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .meta-item label { display: block; font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+    .meta-item span  { font-size: 1rem; font-weight: 700; }
+
+    /* Timeline */
+    .timeline-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .timeline-card h2 { font-size: 1rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 20px; }
+
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 32px;
+      bottom: -4px;
+      width: 2px;
+      background: var(--border);
+      transition: background .4s;
+    }
+    .step.done:not(:last-child)::after  { background: var(--success); }
+    .step.active:not(:last-child)::after { background: var(--border); }
+
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .9rem;
+      transition: all .3s;
+      margin-top: 2px;
+    }
+    .step.done   .step-dot { background: var(--success); border-color: var(--success); color: #fff; }
+    .step.active .step-dot { background: var(--accent);  border-color: var(--accent);  color: #fff; animation: pulse 1.4s infinite; }
+    .step.payout-done .step-dot { background: var(--success); border-color: var(--success); color: #fff; }
+    .step.expired-done .step-dot { background: var(--muted); border-color: var(--muted); color: #fff; }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,.4); }
+      50%       { box-shadow: 0 0 0 6px rgba(99,102,241,0); }
+    }
+
+    .step-body { padding-bottom: 20px; }
+    .step-title { font-weight: 700; font-size: .95rem; }
+    .step-desc  { font-size: .83rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    .step.pending .step-title { color: var(--muted); }
+    .step.pending .step-dot   { opacity: .5; }
+
+    /* Countdown */
+    #countdown-badge {
+      display: inline-block;
+      background: #ede9fe;
+      color: #4f46e5;
+      font-weight: 700;
+      font-size: .85rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+
+    /* Scenario buttons */
+    .scenario-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .scenario-card h2 { font-size: 1rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+    .scenario-card p  { font-size: .88rem; color: var(--muted); margin-bottom: 16px; }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: .9rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      transition: opacity .15s, transform .1s;
+    }
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-delay  { background: var(--danger);  color: #fff; }
+    .btn-ontime { background: var(--success); color: #fff; }
+    .btn-reset  { background: var(--border);  color: var(--text); }
+
+    /* Event log */
+    .log-card {
+      background: #0f172a;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-family: 'Courier New', monospace;
+      font-size: .8rem;
+      color: #94a3b8;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .log-card .log-line { margin: 2px 0; line-height: 1.6; }
+    .log-card .info  { color: #7dd3fc; }
+    .log-card .ok    { color: #6ee7b7; }
+    .log-card .warn  { color: #fde68a; }
+    .log-card .err   { color: #fca5a5; }
+
+    /* Result banner */
+    .result-banner {
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: none;
+      font-weight: 600;
+    }
+    .result-banner.payout {
+      display: block;
+      background: #d1fae5;
+      border: 1px solid #34d399;
+      color: #065f46;
+    }
+    .result-banner.expired {
+      display: block;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+    }
+    .result-banner h3 { font-size: 1.1rem; margin-bottom: 6px; }
+    .result-banner p  { font-size: .88rem; font-weight: 400; word-break: break-all; }
+
+    footer { max-width: 640px; margin: 24px auto 0; text-align: center; font-size: .78rem; color: var(--muted); }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>✈ FlightGuard — Lifecycle Demo</h1>
+  <p>Watch a policy go from purchase to resolution in real time</p>
+</header>
+
+<div class="container">
+
+  <!-- Flight card -->
+  <div class="flight-card">
+    <h2>Demo Flight</h2>
+    <div class="flight-meta">
+      <div class="meta-item"><label>Flight</label><span id="meta-flight">—</span></div>
+      <div class="meta-item"><label>Date</label><span id="meta-date">—</span></div>
+      <div class="meta-item"><label>Departs (UTC)</label><span id="meta-dep">—</span></div>
+      <div class="meta-item"><label>Policy ID</label><span id="meta-id" style="font-size:.78rem;word-break:break-all;">—</span></div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline-card">
+    <h2>Policy Lifecycle</h2>
+    <div class="steps">
+
+      <div class="step pending" id="step-issued">
+        <div class="step-dot">1</div>
+        <div class="step-body">
+          <div class="step-title">Policy Issued</div>
+          <div class="step-desc">Premium paid · Policy active · Monitoring begins</div>
+        </div>
+      </div>
+
+      <div class="step pending" id="step-monitoring">
+        <div class="step-dot">2</div>
+        <div class="step-body">
+          <div class="step-title">Flight Monitoring</div>
+          <div class="step-desc" id="desc-monitoring">Checker polling flight status every 60 s</div>
+          <div id="countdown-badge" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="step pending" id="step-departed">
+        <div class="step-dot">3</div>
+        <div class="step-body">
+          <div class="step-title">Departure Detected</div>
+          <div class="step-desc" id="desc-departed">Actual vs scheduled departure compared</div>
+        </div>
+      </div>
+
+      <div class="step pending" id="step-resolved">
+        <div class="step-dot">4</div>
+        <div class="step-body">
+          <div class="step-title">Resolution</div>
+          <div class="step-desc" id="desc-resolved">Payout sent on-chain or policy expires</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scenario chooser (shown at step 3) -->
+  <div class="scenario-card" id="scenario-card" style="display:none;">
+    <h2>Choose Outcome</h2>
+    <p>The flight has departed. Select a scenario to resolve the policy:</p>
+    <div class="btn-row">
+      <button class="btn-delay"  onclick="resolve('delayed')">🕐 Simulate 90-min Delay → Trigger Payout</button>
+      <button class="btn-ontime" onclick="resolve('ontime')">✅ Simulate On-Time → Policy Expires</button>
+    </div>
+  </div>
+
+  <!-- Result banner -->
+  <div class="result-banner" id="result-banner">
+    <h3 id="result-title"></h3>
+    <p id="result-body"></p>
+  </div>
+
+  <!-- Event log -->
+  <div class="log-card" id="log"></div>
+
+  <!-- Reset -->
+  <div style="text-align:center;">
+    <button class="btn-reset" onclick="reset()">↺ Start New Demo</button>
+  </div>
+
+</div>
+
+<footer>
+  <a href="/">← Back to FlightGuard</a> · Demo uses synthetic data — no real flight or blockchain transaction
+</footer>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────
+  let policyId = null
+  let pollHandle = null
+  let countdownHandle = null
+  let departsAt = null   // ms epoch when flight departs
+  let phase = 'idle'     // idle | issued | monitoring | departed | resolved
+
+  // ── Logging ───────────────────────────────────────────────────
+  function log(msg, cls = '') {
+    const div = document.getElementById('log')
+    const ts = new Date().toISOString().slice(11, 19)
+    const line = document.createElement('div')
+    line.className = 'log-line ' + cls
+    line.textContent = '[' + ts + '] ' + msg
+    div.appendChild(line)
+    div.scrollTop = div.scrollHeight
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+  }
+  function el(id) { return document.getElementById(id) }
+
+  function setStep(id, cls) {
+    const s = el(id)
+    s.className = 'step ' + cls
+    // update dot to checkmark when done
+    const dot = s.querySelector('.step-dot')
+    if (cls === 'done' || cls === 'payout-done' || cls === 'expired-done') dot.textContent = '✓'
+    if (cls === 'active') dot.textContent = s.querySelector('.step-dot').textContent || '●'
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────
+  async function startDemo() {
+    phase = 'issued'
+    log('Creating demo policy…', 'info')
+
+    let data
+    try {
+      const r = await fetch('/demo/policy', { method: 'POST' })
+      data = await r.json()
+    } catch (e) {
+      log('ERROR: ' + e.message, 'err')
+      return
+    }
+
+    policyId = data.policyId
+    const p = data.policy
+    departsAt = new Date(p.scheduledDeparture).getTime()
+
+    // Fill flight card
+    el('meta-flight').textContent = esc(p.flightNumber)
+    el('meta-date').textContent = esc(p.date)
+    el('meta-dep').textContent = new Date(p.scheduledDeparture).toLocaleTimeString('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' }) + ' UTC'
+    el('meta-id').textContent = esc(p.id)
+
+    log('Policy issued: ' + p.id, 'ok')
+    log('Premium: ' + p.premium + ' pathUSD · Payout: ' + p.payoutAmount + ' pathUSD', 'info')
+    log('Departure in ~2 minutes', 'info')
+
+    setStep('step-issued', 'done')
+    setStep('step-monitoring', 'active')
+    phase = 'monitoring'
+
+    // Start countdown to simulated departure
+    startCountdown()
+    // Start polling
+    pollHandle = setInterval(pollPolicy, 3000)
+  }
+
+  function startCountdown() {
+    const badge = el('countdown-badge')
+    badge.style.display = 'inline-block'
+
+    countdownHandle = setInterval(() => {
+      const remaining = Math.max(0, departsAt - Date.now())
+      const s = Math.ceil(remaining / 1000)
+      badge.textContent = s > 0 ? 'Flight departs in ' + s + 's' : 'Flight departing now…'
+
+      if (remaining <= 0) {
+        clearInterval(countdownHandle)
+        onFlightDeparted()
+      }
+    }, 500)
+  }
+
+  function onFlightDeparted() {
+    if (phase !== 'monitoring') return
+    phase = 'departed'
+
+    log('Flight DEMO01 has departed', 'info')
+    log('Checking delay against threshold…', 'info')
+
+    setStep('step-monitoring', 'done')
+    setStep('step-departed', 'active')
+
+    el('desc-departed').textContent = 'Flight departed — choose outcome below'
+    el('countdown-badge').style.display = 'none'
+
+    // Show scenario chooser
+    el('scenario-card').style.display = 'block'
+    el('scenario-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
+
+  async function resolve(scenario) {
+    if (phase !== 'departed' || !policyId) return
+    phase = 'resolved'
+
+    // Disable buttons
+    document.querySelectorAll('.scenario-card button').forEach(b => b.disabled = true)
+
+    log(scenario === 'delayed' ? 'Scenario: 90-min delay — triggering payout…' : 'Scenario: on-time — expiring policy…', 'warn')
+
+    try {
+      const r = await fetch('/demo/policy/' + encodeURIComponent(policyId) + '/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario: scenario === 'delayed' ? 'delayed' : 'ontime' }),
+      })
+      const data = await r.json()
+      const p = data.policy
+
+      setStep('step-departed', 'done')
+
+      if (scenario === 'delayed') {
+        setStep('step-resolved', 'payout-done')
+        el('desc-resolved').textContent = '90-min delay detected · Payout sent on-chain'
+        log('Payout triggered!', 'ok')
+        log('Tx: ' + esc(p.payoutTxHash), 'ok')
+        log('Sent ' + p.payoutAmount + ' pathUSD to ' + p.payoutAddress, 'ok')
+
+        const banner = el('result-banner')
+        banner.className = 'result-banner payout'
+        el('result-title').textContent = '💸 Payout Sent'
+        el('result-body').innerHTML =
+          p.payoutAmount + ' pathUSD sent to ' + esc(p.payoutAddress) + '<br>' +
+          'Tx: ' + esc(p.payoutTxHash)
+      } else {
+        setStep('step-resolved', 'expired-done')
+        el('desc-resolved').textContent = 'Flight on-time · Policy expired, no payout'
+        log('Flight arrived on time — policy expired', 'info')
+
+        const banner = el('result-banner')
+        banner.className = 'result-banner expired'
+        el('result-title').textContent = '✅ Policy Expired — No Delay'
+        el('result-body').textContent = 'The flight arrived within the delay threshold. No payout was triggered.'
+      }
+
+      el('scenario-card').style.display = 'none'
+
+    } catch (e) {
+      log('ERROR: ' + e.message, 'err')
+    }
+
+    clearInterval(pollHandle)
+  }
+
+  async function pollPolicy() {
+    if (!policyId) return
+    try {
+      const r = await fetch('/policy/' + encodeURIComponent(policyId))
+      const d = await r.json()
+      if (d.policy) {
+        const s = d.policy.status
+        if (s === 'paid_out' || s === 'expired') clearInterval(pollHandle)
+      }
+    } catch {}
+  }
+
+  function reset() {
+    clearInterval(pollHandle)
+    clearInterval(countdownHandle)
+    policyId = null; departsAt = null; phase = 'idle'
+
+    ;['step-issued','step-monitoring','step-departed','step-resolved'].forEach(id => {
+      const s = el(id)
+      s.className = 'step pending'
+      s.querySelector('.step-dot').textContent = id.slice(-1).toUpperCase().charCodeAt(0) - 64 + ''
+      // restore numbers
+    })
+    // Restore dot numbers
+    el('step-issued').querySelector('.step-dot').textContent = '1'
+    el('step-monitoring').querySelector('.step-dot').textContent = '2'
+    el('step-departed').querySelector('.step-dot').textContent = '3'
+    el('step-resolved').querySelector('.step-dot').textContent = '4'
+
+    el('meta-flight').textContent = '—'
+    el('meta-date').textContent = '—'
+    el('meta-dep').textContent = '—'
+    el('meta-id').textContent = '—'
+    el('desc-monitoring').textContent = 'Checker polling flight status every 60 s'
+    el('desc-departed').textContent = 'Actual vs scheduled departure compared'
+    el('desc-resolved').textContent = 'Payout sent on-chain or policy expires'
+    el('countdown-badge').style.display = 'none'
+    el('scenario-card').style.display = 'none'
+    el('result-banner').className = 'result-banner'
+    el('log').innerHTML = ''
+
+    document.querySelectorAll('.scenario-card button').forEach(b => b.disabled = false)
+
+    startDemo()
+  }
+
+  // Auto-start
+  startDemo()
+</script>
+
+</body>
+</html>
