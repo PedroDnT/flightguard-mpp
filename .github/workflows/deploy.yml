@@ -40,6 +40,20 @@ jobs:
             WALLET_OUTPUT=$(cast wallet new)
             NEW_ADDRESS=$(echo "$WALLET_OUTPUT" | grep -oP 'Address:\s+\K0x[0-9a-fA-F]{40}')
             NEW_PRIVATE_KEY=$(echo "$WALLET_OUTPUT" | grep -oP 'Private key:\s+\K0x[0-9a-fA-F]{64}')
+
+            if [ -z "$NEW_ADDRESS" ] || [ -z "$NEW_PRIVATE_KEY" ]; then
+              echo "ERROR: Failed to parse cast wallet new output:"
+              echo "$WALLET_OUTPUT"
+              exit 1
+            fi
+
+            echo "Generated address: $NEW_ADDRESS"
+            echo "Funding via Tempo testnet faucet..."
+            if ! cast rpc tempo_fundAddress "$NEW_ADDRESS" --rpc-url https://rpc.moderato.tempo.xyz; then
+              echo "ERROR: Failed to fund address $NEW_ADDRESS via Tempo faucet."
+              exit 1
+            fi
+
             echo "POOL_PRIVATE_KEY=$NEW_PRIVATE_KEY" >> "$GITHUB_ENV"
             echo "POOL_ADDRESS=$NEW_ADDRESS" >> "$GITHUB_ENV"
           fi

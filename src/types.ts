@@ -26,6 +26,7 @@ export interface Policy {
   payoutTxHash?: string       // Set when payout fires
   lastCheckedAt?: number      // Last time checker polled this policy
   lastFlightStatus?: string   // Last known flight status string
+  isDemo?: true               // Set for demo policies — prevents mutation via real /insure flow
 }
 
 // ------------------------------------------------------------

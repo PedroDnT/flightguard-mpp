@@ -130,17 +130,19 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
         const premiumCents = BigInt(Math.round(parseFloat(config.premiumAmount) * 100))
         const payoutAmount = (Number(premiumCents * BigInt(config.payoutMultiplier)) / 100).toFixed(2)
 
+        // Settle BEFORE creating the policy — no pool revenue means no policy
+        const settleResult = await x402settle(payload, requirements)
+        if (!settleResult.success) {
+          console.error(`[SERVER] x402 settle failed: ${settleResult.errorReason}`)
+          return c.json({ error: 'Payment settlement failed', reason: settleResult.errorReason }, 402)
+        }
+        console.log(`[SERVER] x402 payment settled`)
+
         const policy = store.create({
           req: { flightNumber, date, payoutAddress },
           premiumAmount: config.premiumAmount,
           payoutAmount,
           scheduledDeparture,
-        })
-
-        // Settle after policy is created (non-blocking for policy creation)
-        x402settle(payload, requirements).catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err)
-          console.error(`[SERVER] x402 settle error: ${msg}`)
         })
 
         const response: InsureResponse = {
@@ -361,6 +363,7 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
       premiumAmount: config.premiumAmount,
       payoutAmount,
       scheduledDeparture: departureTime.toISOString(),
+      isDemo: true,
     })
 
     console.log(`[DEMO] Policy created: ${policy.id}`)
@@ -374,9 +377,10 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
     const id = c.req.param('id')
     const policy = store.get(id)
     if (!policy) return c.json({ error: 'Policy not found' }, 404)
+    if (!policy.isDemo) return c.json({ error: 'Not a demo policy' }, 403)
 
     let body: { scenario?: string } = {}
-    try { body = await c.req.json() } catch {}
+    try { body = (await c.req.json()) || {} } catch {}
 
     if (body.scenario === 'ontime') {
       store.markExpired(id)

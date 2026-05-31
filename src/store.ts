@@ -46,6 +46,7 @@ export class PolicyStore {
     premiumAmount: string
     payoutAmount: string
     scheduledDeparture: string
+    isDemo?: true
   }): Policy {
     const id = randomUUID()
     const now = Date.now()
@@ -61,6 +62,7 @@ export class PolicyStore {
       scheduledDeparture: params.scheduledDeparture,
       createdAt: now,
       updatedAt: now,
+      ...(params.isDemo ? { isDemo: true as const } : {}),
     }
 
     this.policies.set(id, policy)

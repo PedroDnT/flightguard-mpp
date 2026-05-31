@@ -421,7 +421,7 @@
         banner.className = 'result-banner payout'
         el('result-title').textContent = '💸 Payout Sent'
         el('result-body').innerHTML =
-          p.payoutAmount + ' pathUSD sent to ' + esc(p.payoutAddress) + '<br>' +
+          esc(p.payoutAmount) + ' pathUSD sent to ' + esc(p.payoutAddress) + '<br>' +
           'Tx: ' + esc(p.payoutTxHash)
       } else {
         setStep('step-resolved', 'expired-done')
@@ -460,17 +460,11 @@
     clearInterval(countdownHandle)
     policyId = null; departsAt = null; phase = 'idle'
 
-    ;['step-issued','step-monitoring','step-departed','step-resolved'].forEach(id => {
+    ;['step-issued','step-monitoring','step-departed','step-resolved'].forEach((id, idx) => {
       const s = el(id)
       s.className = 'step pending'
-      s.querySelector('.step-dot').textContent = id.slice(-1).toUpperCase().charCodeAt(0) - 64 + ''
-      // restore numbers
+      s.querySelector('.step-dot').textContent = String(idx + 1)
     })
-    // Restore dot numbers
-    el('step-issued').querySelector('.step-dot').textContent = '1'
-    el('step-monitoring').querySelector('.step-dot').textContent = '2'
-    el('step-departed').querySelector('.step-dot').textContent = '3'
-    el('step-resolved').querySelector('.step-dot').textContent = '4'
 
     el('meta-flight').textContent = '—'
     el('meta-date').textContent = '—'
