@@ -8,17 +8,17 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --accent: #6366f1;
+      --accent:      #6366f1;
       --accent-dark: #4f46e5;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warn: #f59e0b;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --border: #e2e8f0;
-      --text: #1e293b;
-      --muted: #64748b;
-      --radius: 12px;
+      --success:     #10b981;
+      --danger:      #ef4444;
+      --warn:        #f59e0b;
+      --bg:          #f1f5f9;
+      --card:        #ffffff;
+      --border:      #e2e8f0;
+      --text:        #1e293b;
+      --muted:       #64748b;
+      --radius:      14px;
     }
 
     body {
@@ -26,438 +26,617 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 24px 16px 64px;
     }
 
-    header {
-      max-width: 600px;
-      margin: 0 auto 32px;
-      text-align: center;
-    }
-
-    header h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: var(--accent);
-    }
-
-    header p {
-      color: var(--muted);
-      margin-top: 6px;
-      font-size: 1rem;
-    }
-
-    /* Pool stats bar */
-    #pool-bar {
-      max-width: 600px;
-      margin: 0 auto 28px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 20px;
+    /* ── Top bar ─────────────────────────────────────────────── */
+    .topbar {
+      background: var(--accent);
+      color: #fff;
+      padding: 0 32px;
+      height: 56px;
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px 24px;
-      font-size: 0.85rem;
-      color: var(--muted);
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .topbar-brand { font-weight: 800; font-size: 1.1rem; letter-spacing: -.3px; }
+    .topbar-stats { display: flex; gap: 20px; font-size: .82rem; opacity: .92; }
+    .topbar-stats span strong { font-weight: 700; }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 0 24px 48px;
+    }
+    @media (max-width: 768px) {
+      .panels { grid-template-columns: 1fr; }
+      .topbar-stats { display: none; }
     }
 
-    #pool-bar .stat { display: flex; gap: 6px; align-items: center; }
-    #pool-bar .stat span { font-weight: 600; color: var(--text); }
-
-    /* Cards */
+    /* ── Card ────────────────────────────────────────────────── */
     .card {
-      max-width: 600px;
-      margin: 0 auto 24px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 28px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
     }
-
-    .card h2 {
-      font-size: 1.1rem;
+    .card-title {
+      font-size: .72rem;
       font-weight: 700;
-      margin-bottom: 20px;
-      color: var(--text);
-    }
-
-    /* Form */
-    .field { margin-bottom: 18px; }
-
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: var(--text);
-    }
-
-    label .hint {
-      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: .6px;
       color: var(--muted);
-      font-size: 0.8rem;
-      margin-left: 4px;
+      margin-bottom: 20px;
     }
 
-    input[type="text"], input[type="date"], textarea {
+    /* ── Form fields ─────────────────────────────────────────── */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .field .hint { font-weight: 400; text-transform: none; letter-spacing: 0; margin-left: 6px; color: #94a3b8; }
+    input[type="text"], input[type="date"], input[type="number"] {
       width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: 8px;
-      font-size: 0.95rem;
+      padding: 9px 12px;
+      font-size: .92rem;
       color: var(--text);
       background: #fff;
       transition: border-color .15s;
       outline: none;
     }
+    input:focus { border-color: var(--accent); }
+    .row-fields { display: flex; gap: 10px; }
+    .row-fields .field { flex: 1; margin-bottom: 0; }
 
-    input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+    /* ── Buttons ─────────────────────────────────────────────── */
+    button {
+      border: none; cursor: pointer; border-radius: 8px;
+      font-size: .9rem; font-weight: 600; padding: 10px 18px;
+      transition: opacity .15s, transform .1s;
     }
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary  { background: var(--accent); color: #fff; width: 100%; margin-top: 4px; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-dark); }
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-success  { background: var(--success); color: #fff; width: 100%; margin-top: 4px; }
+    .btn-sm       { padding: 6px 12px; font-size: .8rem; }
 
-    .field-error {
-      font-size: 0.78rem;
-      color: var(--danger);
-      margin-top: 4px;
-      display: none;
-    }
-
+    /* ── Field error ─────────────────────────────────────────── */
+    .field-error { display: none; font-size: .78rem; color: var(--danger); margin-top: 4px; }
     .field-error.visible { display: block; }
 
-    /* Buttons */
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      padding: 11px 22px;
-      transition: background .15s, opacity .15s;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      width: 100%;
-      margin-top: 4px;
-    }
-
-    .btn-primary:hover { background: var(--accent-dark); }
-    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-
-    .btn-secondary {
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .btn-secondary:hover { background: var(--border); }
-
-    /* Alerts */
-    .alert {
-      border-radius: 8px;
-      padding: 14px 16px;
-      font-size: 0.9rem;
-      margin-top: 20px;
+    /* ── Flight preview card ─────────────────────────────────── */
+    #flight-preview {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 16px 0;
       display: none;
     }
-
-    .alert.visible { display: block; }
-    .alert-success { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; }
-    .alert-danger  { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
-    .alert-warn    { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-
-    .alert h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
-    .alert p  { margin-bottom: 6px; line-height: 1.5; }
-    .alert code {
-      display: block;
-      background: rgba(0,0,0,.06);
-      border-radius: 4px;
-      padding: 8px 10px;
-      font-size: 0.82rem;
-      margin: 8px 0;
-      word-break: break-all;
-    }
-
-    /* Policy result */
-    .policy-row {
+    .flight-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.88rem;
+      gap: 12px;
+      margin-bottom: 12px;
     }
-    .policy-row:last-child { border-bottom: none; }
-    .policy-row .key { color: var(--muted); }
-    .policy-row .val { font-weight: 600; text-align: right; max-width: 70%; word-break: break-all; }
+    .airline-badge {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .85rem; flex-shrink: 0;
+    }
+    .flight-name { font-weight: 700; font-size: 1rem; }
+    .flight-sub  { font-size: .78rem; color: var(--muted); }
+    .route-row   { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+    .iata        { font-weight: 800; font-size: 1.1rem; }
+    .route-arrow { color: var(--muted); font-size: 1rem; flex: 1; text-align: center; }
+    .route-time  { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+    .status-row  { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: .82rem; }
 
     .badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .5px;
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
     }
-    .badge-active   { background: #dbeafe; color: #1e40af; }
-    .badge-paid_out { background: #d1fae5; color: #065f46; }
-    .badge-expired  { background: #f1f5f9; color: #64748b; }
-    .badge-cancelled{ background: #fee2e2; color: #991b1b; }
+    .badge-Scheduled  { background: #dbeafe; color: #1e40af; }
+    .badge-Departed,
+    .badge-EnRoute    { background: #fef3c7; color: #92400e; }
+    .badge-Landed,
+    .badge-Arrived    { background: #d1fae5; color: #065f46; }
+    .badge-Cancelled  { background: #fee2e2; color: #991b1b; }
+    .badge-Diverted   { background: #ffedd5; color: #9a3412; }
+    .badge-Unknown,
+    .badge-active     { background: #dbeafe; color: #1e40af; }
+    .badge-paid_out   { background: #d1fae5; color: #065f46; }
+    .badge-expired    { background: #f1f5f9; color: #64748b; }
+    .badge-cancelled  { background: #fee2e2; color: #991b1b; }
 
-    /* Status lookup */
-    .lookup-row {
+    /* ── Alert boxes ─────────────────────────────────────────── */
+    .alert { display: none; border-radius: 10px; padding: 16px; margin-top: 14px; }
+    .alert.visible { display: block; }
+    .alert-success { background: #d1fae5; border: 1px solid #34d399; }
+    .alert-danger  { background: #fee2e2; border: 1px solid #fca5a5; }
+    .alert-warn    { background: #fef3c7; border: 1px solid #fcd34d; }
+    .alert h3      { font-size: .95rem; margin-bottom: 8px; }
+    .alert p, .alert label { font-size: .85rem; }
+    .alert code    { display: block; background: rgba(0,0,0,.07); padding: 8px 10px; border-radius: 6px; font-size: .78rem; margin: 8px 0; word-break: break-all; }
+    .alert textarea {
+      width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px;
+      border: 1px solid rgba(0,0,0,.15); font-size: .78rem; font-family: monospace;
+      min-height: 70px; resize: vertical;
+    }
+
+    /* ── Policy detail rows ──────────────────────────────────── */
+    .policy-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: .83rem; border-bottom: 1px solid var(--border); }
+    .policy-row:last-child { border-bottom: none; }
+    .policy-row .key { color: var(--muted); }
+    .policy-row .val { font-weight: 600; text-align: right; word-break: break-all; max-width: 60%; }
+
+    /* ── Vault panel ─────────────────────────────────────────── */
+    .balance-big {
+      text-align: center;
+      padding: 24px 0 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .balance-big .amount {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .balance-big .unit { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+
+    .address-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
       display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .address-box code { font-size: .72rem; flex: 1; word-break: break-all; color: var(--text); }
+
+    .deposit-section { margin-bottom: 20px; }
+    .deposit-section h3 { font-size: .88rem; font-weight: 700; margin-bottom: 10px; }
+    .deposit-section p  { font-size: .82rem; color: var(--muted); margin-bottom: 12px; }
+
+    .amount-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .amount-row input { flex: 1; }
+    .amount-row span   { display: flex; align-items: center; font-weight: 600; font-size: .88rem; color: var(--muted); }
+
+    .cmd-box {
+      background: #0f172a;
+      color: #7dd3fc;
+      font-family: monospace;
+      font-size: .75rem;
+      padding: 10px 12px;
+      border-radius: 8px;
+      word-break: break-all;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      min-height: 38px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
+      margin-top: 4px;
     }
-    .lookup-row input { flex: 1; }
-    .lookup-row button { width: auto; flex-shrink: 0; }
-
-    /* Credential retry section */
-    #payment-section textarea {
-      font-family: 'Courier New', monospace;
-      font-size: 0.8rem;
-      resize: vertical;
-      min-height: 80px;
+    .stat-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-align: center;
     }
+    .stat-box .n { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+    .stat-box .l { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
 
-    #payment-section .btn-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    #payment-section .btn-group button { flex: 1; }
-
-    /* Spinner */
+    /* ── Spinner ─────────────────────────────────────────────── */
     .spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .6s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      margin-right: 7px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    footer {
-      max-width: 600px;
-      margin: 32px auto 0;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--muted);
+    /* ── Misc ────────────────────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: #fff; padding: 8px 20px; border-radius: 20px;
+      font-size: .82rem; font-weight: 600; opacity: 0;
+      transition: opacity .2s; pointer-events: none; z-index: 99;
     }
+    #toast.show { opacity: 1; }
+
+    .lookup-row { display: flex; gap: 8px; margin-top: 8px; }
+    .lookup-row input { flex: 1; }
+    .lookup-row button { width: auto; flex-shrink: 0; }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>✈ FlightGuard</h1>
-  <p>Parametric flight delay insurance on the Tempo blockchain</p>
-</header>
-
-<!-- Pool stats bar -->
-<div id="pool-bar">
-  <div class="stat">Pool <span id="stat-balance">loading…</span></div>
-  <div class="stat">Premium <span id="stat-premium">—</span></div>
-  <div class="stat">Payout <span id="stat-payout">—</span></div>
-  <div class="stat">Delay trigger <span id="stat-delay">—</span></div>
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-brand">✈ FlightGuard</div>
+  <div class="topbar-stats">
+    <span>Pool <strong id="tb-balance">loading…</strong></span>
+    <span>Premium <strong id="tb-premium">—</strong></span>
+    <span>Payout <strong id="tb-payout">—</strong> if delay ≥ <strong id="tb-delay">—</strong> min</span>
+  </div>
 </div>
 
-<!-- ── Buy Insurance ─────────────────────────────────────────── -->
-<div class="card">
-  <h2>Buy Flight Delay Insurance</h2>
+<div class="panels">
 
-  <div class="field">
-    <label for="flightNumber">Flight Number <span class="hint">e.g. LA3251</span></label>
-    <input type="text" id="flightNumber" placeholder="LA3251" maxlength="8" autocomplete="off" />
-    <div class="field-error" id="err-flight">Enter a valid flight number (2–8 alphanumeric characters)</div>
-  </div>
+  <!-- ═══════════════════════════════════════════════════════════
+       LEFT PANEL — Buy Insurance
+  ════════════════════════════════════════════════════════════ -->
+  <div>
 
-  <div class="field">
-    <label for="flightDate">Departure Date</label>
-    <input type="date" id="flightDate" />
-    <div class="field-error" id="err-date">Date must be today or in the future</div>
-  </div>
+    <!-- Step 1: Find flight -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Step 1 — Find your flight</div>
 
-  <div class="field">
-    <label for="payoutAddress">Payout Wallet Address <span class="hint">receives payout if flight is delayed</span></label>
-    <input type="text" id="payoutAddress" placeholder="0x…" autocomplete="off" />
-    <div class="field-error" id="err-addr">Enter a valid EVM address (0x + 40 hex characters)</div>
-  </div>
+      <div class="row-fields" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Flight Number <span class="hint">e.g. LA3251</span></label>
+          <input type="text" id="flightNumber" placeholder="LA3251" maxlength="8" autocomplete="off" />
+          <div class="field-error" id="err-flight">2–8 alphanumeric characters</div>
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="flightDate" />
+          <div class="field-error" id="err-date">Today or future date</div>
+        </div>
+      </div>
 
-  <button class="btn-primary" id="btn-insure" onclick="submitInsure()">
-    Buy Insurance
-  </button>
+      <button class="btn-primary" id="btn-lookup" onclick="lookupFlight()">Look Up Flight</button>
 
-  <!-- Success -->
-  <div class="alert alert-success" id="alert-success">
-    <h3>✅ Policy Active</h3>
-    <div id="policy-details"></div>
-  </div>
+      <!-- Flight preview card -->
+      <div id="flight-preview">
+        <div class="flight-row">
+          <div class="airline-badge" id="prev-badge">?</div>
+          <div>
+            <div class="flight-name" id="prev-flight">—</div>
+            <div class="flight-sub"  id="prev-airline">—</div>
+          </div>
+        </div>
+        <div class="route-row">
+          <div>
+            <div class="iata" id="prev-dep-iata">—</div>
+            <div class="route-time" id="prev-dep-name">—</div>
+            <div class="route-time" id="prev-dep-time">—</div>
+          </div>
+          <div class="route-arrow">→</div>
+          <div style="text-align:right;">
+            <div class="iata" id="prev-arr-iata">—</div>
+            <div class="route-time" id="prev-arr-name">—</div>
+            <div class="route-time" id="prev-arr-time">—</div>
+          </div>
+        </div>
+        <div class="status-row">
+          Status <span id="prev-status-badge" class="badge">—</span>
+          <span id="prev-delay" style="color:var(--danger);font-weight:600;"></span>
+        </div>
+      </div>
 
-  <!-- Error -->
-  <div class="alert alert-danger" id="alert-error">
-    <h3>❌ Error</h3>
-    <p id="error-message"></p>
-  </div>
-
-  <!-- 402 Payment Required -->
-  <div class="alert alert-warn" id="alert-payment">
-    <h3>💳 Payment Required</h3>
-    <p>Send <strong id="pay-amount">1.00 pathUSD</strong> to the pool address to complete your purchase:</p>
-    <code id="pay-pool-address">loading…</code>
-    <p style="margin-top:10px;">Use the Tempo CLI:</p>
-    <code id="pay-cli-cmd">tempo wallet transfer 1 pathUSD &lt;pool-address&gt;</code>
-    <div id="payment-section" style="margin-top:16px;">
-      <label for="credential-input" style="color: #92400e;">Paste your payment credential to complete purchase:</label>
-      <textarea id="credential-input" placeholder="Paste Authorization credential from Tempo wallet…"></textarea>
-      <div class="btn-group">
-        <button class="btn-secondary" onclick="cancelPayment()">Cancel</button>
-        <button class="btn-primary" style="width:auto;" onclick="retryWithCredential()">Complete Purchase →</button>
+      <div class="alert alert-danger" id="lookup-error">
+        <h3>Flight Not Found</h3>
+        <p id="lookup-error-msg"></p>
       </div>
     </div>
+
+    <!-- Step 2: Buy -->
+    <div class="card" id="step2-card" style="display:none;">
+      <div class="card-title">Step 2 — Buy insurance</div>
+
+      <div class="field">
+        <label>Payout Wallet Address <span class="hint">receives payout if delayed</span></label>
+        <input type="text" id="payoutAddress" placeholder="0x…" autocomplete="off" />
+        <div class="field-error" id="err-addr">Valid EVM address required (0x + 40 hex chars)</div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin:12px 0;font-size:.83rem;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="color:var(--muted);">Premium</span>
+          <strong id="buy-premium">1.00 pathUSD</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="color:var(--muted);">Payout if delay ≥ <span id="buy-threshold">60</span> min</span>
+          <strong id="buy-payout" style="color:var(--success);">5.00 pathUSD</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--muted);">Payment method</span>
+          <strong>MPP / pathUSD</strong>
+        </div>
+      </div>
+
+      <button class="btn-success" id="btn-insure" onclick="submitInsure()">Buy Insurance</button>
+
+      <!-- 402 Payment Required -->
+      <div class="alert alert-warn" id="alert-payment">
+        <h3>💳 Payment Required</h3>
+        <p>Send <strong id="pay-amount">1.00 pathUSD</strong> to the pool using the Tempo CLI:</p>
+        <code id="pay-cli-cmd">—</code>
+        <label for="credential-input" style="margin-top:10px;display:block;color:#92400e;font-weight:600;">Paste your payment credential:</label>
+        <textarea id="credential-input" placeholder="Paste Authorization credential from Tempo wallet…"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-secondary btn-sm" onclick="cancelPayment()">Cancel</button>
+          <button class="btn-primary btn-sm" style="flex:1;" onclick="retryWithCredential()">Complete Purchase →</button>
+        </div>
+      </div>
+
+      <!-- Success -->
+      <div class="alert alert-success" id="alert-success">
+        <h3>✅ Policy Active</h3>
+        <div id="policy-details" style="margin-top:8px;"></div>
+      </div>
+
+      <!-- Error -->
+      <div class="alert alert-danger" id="alert-error">
+        <h3>❌ Error</h3>
+        <p id="error-message"></p>
+      </div>
+    </div>
+
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       RIGHT PANEL — Insurance Pool Vault
+  ════════════════════════════════════════════════════════════ -->
+  <div>
+    <div class="card">
+      <div class="card-title">Insurance Pool Vault</div>
+
+      <!-- Balance -->
+      <div class="balance-big">
+        <div class="amount" id="vault-balance">—</div>
+        <div class="unit">pathUSD in pool</div>
+      </div>
+
+      <!-- Pool address -->
+      <div class="field" style="margin-bottom:8px;"><label>Pool Address</label></div>
+      <div class="address-box">
+        <code id="pool-addr">loading…</code>
+        <button class="btn-secondary btn-sm" onclick="copy(el('pool-addr').textContent)">Copy</button>
+      </div>
+
+      <!-- Deposit -->
+      <div class="deposit-section">
+        <h3>Deposit Funds</h3>
+        <p>Send pathUSD to the pool to back insurance payouts. Any Tempo wallet works.</p>
+        <div class="amount-row">
+          <input type="number" id="deposit-amount" value="100" min="1" />
+          <span>pathUSD</span>
+        </div>
+        <div class="cmd-box" id="deposit-cmd">loading…</div>
+        <button class="btn-secondary btn-sm" style="width:100%;" onclick="copy(el('deposit-cmd').textContent)">Copy CLI Command</button>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Policy stats -->
+      <div class="field" style="margin-bottom:12px;"><label>Pool Activity</label></div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="n" id="stat-active">—</div><div class="l">Active</div></div>
+        <div class="stat-box"><div class="n" id="stat-paid">—</div><div class="l">Paid Out</div></div>
+        <div class="stat-box"><div class="n" id="stat-expired">—</div><div class="l">Expired</div></div>
+        <div class="stat-box"><div class="n" id="stat-cancelled">—</div><div class="l">Cancelled</div></div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Check policy -->
+      <div class="field" style="margin-bottom:8px;"><label>Check Policy Status</label></div>
+      <div class="lookup-row">
+        <input type="text" id="policyId" placeholder="Policy ID" />
+        <button class="btn-secondary" onclick="lookupPolicy()">Check →</button>
+      </div>
+      <div class="alert alert-success" id="policy-result" style="margin-top:12px;"></div>
+      <div class="alert alert-danger"  id="policy-error"  style="margin-top:12px;"></div>
+    </div>
+  </div>
+
 </div>
 
-<!-- ── Check Policy Status ────────────────────────────────────── -->
-<div class="card">
-  <h2>Check Policy Status</h2>
-  <div class="lookup-row">
-    <input type="text" id="policyId" placeholder="Policy ID (e.g. abc123-…)" />
-    <button class="btn-secondary" onclick="lookupPolicy()">Check →</button>
-  </div>
-  <div class="alert alert-success" id="policy-result" style="margin-top:16px;"></div>
-  <div class="alert alert-danger"  id="policy-error"  style="margin-top:16px;"></div>
-</div>
-
-<footer>
-  Powered by <a href="https://tempo.xyz" target="_blank" style="color:var(--accent);">Tempo</a> ·
-  Payouts settle automatically on-chain ·
-  Testnet
-</footer>
+<div id="toast">Copied!</div>
 
 <script>
-  // ── State ──────────────────────────────────────────────────
-  let pendingRequest = null   // { flightNumber, date, payoutAddress }
-  let poolAddress = ''
-  let explorerBase = 'https://explore.testnet.tempo.xyz'
-
-  // Escape HTML entities to prevent XSS when interpolating server data into innerHTML
+  function el(id) { return document.getElementById(id) }
   function esc(s) {
-    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
   }
 
-  // ── Boot: load pool health ─────────────────────────────────
+  let explorerBase   = 'https://explore.testnet.tempo.xyz'
+  let poolAddress    = ''
+  let pendingRequest = null
+
+  function copy(text) {
+    navigator.clipboard.writeText(String(text)).catch(() => {})
+    const t = el('toast')
+    t.classList.add('show')
+    setTimeout(() => t.classList.remove('show'), 1600)
+  }
+
+  // ── Health / vault data ───────────────────────────────────
   async function loadHealth() {
     try {
       const r = await fetch('/health')
       if (!r.ok) return
       const d = await r.json()
-      poolAddress = d.pool?.address ?? ''
+
+      poolAddress  = d.pool?.address ?? ''
       explorerBase = d.network?.chainId === 4217
         ? 'https://explore.tempo.xyz'
         : 'https://explore.testnet.tempo.xyz'
-      const bal = d.pool?.balance ?? '—'
+
+      const bal     = d.pool?.balance ?? '—'
       const premium = d.config?.premium ?? '—'
-      const mult = d.config?.payoutMultiplier ?? ''
-      const delay = d.config?.delayThresholdMin ?? '—'
-      const payoutVal = premium && mult
-        ? (parseFloat(premium) * mult).toFixed(2) + ' pathUSD'
-        : '—'
+      const mult    = d.config?.payoutMultiplier ?? 0
+      const delay   = d.config?.delayThresholdMin ?? '—'
+      const premNum = parseFloat(premium) || 1
+      const payoutVal = mult ? (premNum * mult).toFixed(2) + ' pathUSD' : '—'
 
-      el('stat-balance').textContent = bal
-      el('stat-premium').textContent = premium
-      el('stat-payout').textContent = payoutVal
-      el('stat-delay').textContent = delay + ' min'
+      el('tb-balance').textContent = bal
+      el('tb-premium').textContent = premium
+      el('tb-payout').textContent  = payoutVal.replace(' pathUSD','')
+      el('tb-delay').textContent   = delay
 
-      // Pre-fill CLI command
-      if (poolAddress) {
-        el('pay-pool-address').textContent = poolAddress
-        el('pay-cli-cmd').textContent =
-          'tempo wallet transfer ' + (parseFloat(premium||'1')).toFixed(2) + ' pathUSD ' + poolAddress
-      }
+      el('vault-balance').textContent = bal.replace(' pathUSD','')
+      el('pool-addr').textContent     = poolAddress || '—'
+
+      el('buy-premium').textContent   = premium
+      el('buy-payout').textContent    = payoutVal
+      el('buy-threshold').textContent = delay
+
+      el('pay-amount').textContent  = premium
+      el('pay-cli-cmd').textContent =
+        `tempo wallet transfer ${premNum.toFixed(2)} pathUSD ${poolAddress}`
+
+      updateDepositCmd()
+
+      const p = d.policies ?? {}
+      el('stat-active').textContent    = p.active    ?? '—'
+      el('stat-paid').textContent      = p.paid_out  ?? '—'
+      el('stat-expired').textContent   = p.expired   ?? '—'
+      el('stat-cancelled').textContent = p.cancelled ?? '—'
     } catch (_) {}
   }
 
-  // ── Helpers ────────────────────────────────────────────────
-  function el(id) { return document.getElementById(id) }
-
-  function setLoading(loading) {
-    const btn = el('btn-insure')
-    btn.disabled = loading
-    btn.innerHTML = loading
-      ? '<span class="spinner"></span>Processing…'
-      : 'Buy Insurance'
+  function updateDepositCmd() {
+    const amt = parseFloat(el('deposit-amount').value) || 100
+    el('deposit-cmd').textContent =
+      `tempo wallet transfer ${amt.toFixed(2)} pathUSD ${poolAddress || '<pool-address>'}`
   }
 
+  // ── Flight lookup ─────────────────────────────────────────
+  async function lookupFlight() {
+    const flight = el('flightNumber').value.trim().toUpperCase()
+    const date   = el('flightDate').value
+
+    el('err-flight').classList.remove('visible')
+    el('err-date').classList.remove('visible')
+    el('lookup-error').classList.remove('visible')
+    el('flight-preview').style.display = 'none'
+    el('step2-card').style.display = 'none'
+
+    let ok = true
+    if (!/^[A-Z0-9]{2,8}$/i.test(flight)) { el('err-flight').classList.add('visible'); ok = false }
+    if (!date) { el('err-date').classList.add('visible'); ok = false }
+    if (!ok) return
+
+    const btn = el('btn-lookup')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span>Looking up…'
+
+    try {
+      const r = await fetch(
+        `/flight-lookup?flight=${encodeURIComponent(flight)}&date=${encodeURIComponent(date)}`
+      )
+      const d = await r.json()
+
+      if (!r.ok) {
+        el('lookup-error-msg').textContent = d.error || 'Flight not found'
+        el('lookup-error').classList.add('visible')
+        return
+      }
+
+      showFlightPreview(d.flight, flight)
+      el('step2-card').style.display = 'block'
+      el('step2-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+
+    } catch (e) {
+      el('lookup-error-msg').textContent = 'Network error: ' + e.message
+      el('lookup-error').classList.add('visible')
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Look Up Flight'
+    }
+  }
+
+  function showFlightPreview(f, rawNumber) {
+    const iata    = f.airline?.iata ?? rawNumber.slice(0,2)
+    const status  = f.status ?? 'Unknown'
+    const depTime = f.departure?.scheduledTime?.utc
+      ? new Date(f.departure.scheduledTime.utc).toLocaleTimeString('en-GB',
+          { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC'
+      : '—'
+    const arrTime = f.arrival?.scheduledTime?.utc
+      ? new Date(f.arrival.scheduledTime.utc).toLocaleTimeString('en-GB',
+          { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC'
+      : '—'
+    const delay = f.departure?.delays?.[0]?.minutes
+
+    el('prev-badge').textContent    = iata.slice(0,2)
+    el('prev-flight').textContent   = rawNumber
+    el('prev-airline').textContent  = f.airline?.name ?? '—'
+    el('prev-dep-iata').textContent = f.departure?.iata ?? '—'
+    el('prev-dep-name').textContent = f.departure?.name ?? '—'
+    el('prev-dep-time').textContent = depTime
+    el('prev-arr-iata').textContent = f.arrival?.iata ?? '—'
+    el('prev-arr-name').textContent = f.arrival?.name ?? '—'
+    el('prev-arr-time').textContent = arrTime
+
+    const badge = el('prev-status-badge')
+    badge.textContent = status
+    badge.className   = 'badge badge-' + status
+
+    el('prev-delay').textContent = delay ? '+' + delay + ' min delay' : ''
+    el('flight-preview').style.display = 'block'
+  }
+
+  // ── Buy insurance ─────────────────────────────────────────
   function hideAlerts() {
-    el('alert-success').classList.remove('visible')
-    el('alert-error').classList.remove('visible')
-    el('alert-payment').classList.remove('visible')
+    ;['alert-payment','alert-success','alert-error'].forEach(id =>
+      el(id).classList.remove('visible')
+    )
   }
-
   function showError(msg) {
     hideAlerts()
     el('error-message').textContent = msg
     el('alert-error').classList.add('visible')
   }
 
-  function clearFieldErrors() {
-    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('visible'))
-  }
-
-  // ── Validation ─────────────────────────────────────────────
-  function validate() {
-    clearFieldErrors()
-    let ok = true
-
-    const flight = el('flightNumber').value.trim()
-    if (!/^[A-Z0-9]{2,8}$/i.test(flight)) {
-      el('err-flight').classList.add('visible')
-      ok = false
-    }
-
-    const date = el('flightDate').value
-    if (!date) {
-      el('err-date').classList.add('visible')
-      ok = false
-    } else {
-      const today = new Date()
-      today.setUTCHours(0, 0, 0, 0)
-      if (new Date(date + 'T00:00:00Z') < today) {
-        el('err-date').classList.add('visible')
-        ok = false
-      }
-    }
-
-    const addr = el('payoutAddress').value.trim()
-    if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) {
-      el('err-addr').classList.add('visible')
-      ok = false
-    }
-
-    return ok
-  }
-
-  // ── POST /insure ───────────────────────────────────────────
   async function submitInsure(credential) {
-    if (!credential && !validate()) return
+    const addr = el('payoutAddress').value.trim()
+    el('err-addr').classList.remove('visible')
+
+    if (!credential && !/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+      el('err-addr').classList.add('visible')
+      return
+    }
 
     hideAlerts()
-    setLoading(true)
+    const btn = el('btn-insure')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span>Processing…'
 
     const body = pendingRequest || {
       flightNumber: el('flightNumber').value.trim().toUpperCase(),
-      date: el('flightDate').value,
-      payoutAddress: el('payoutAddress').value.trim(),
+      date:         el('flightDate').value,
+      payoutAddress: addr,
     }
 
     const headers = { 'Content-Type': 'application/json' }
@@ -465,22 +644,21 @@
 
     try {
       const r = await fetch('/insure', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
+        method: 'POST', headers, body: JSON.stringify(body),
       })
 
       if (r.status === 201) {
-        const d = await r.json()
         pendingRequest = null
+        const d = await r.json()
         showPolicy(d)
+        loadHealth()
         return
       }
 
       if (r.status === 402) {
         pendingRequest = body
-        const wwwAuth = r.headers.get('WWW-Authenticate') || ''
-        show402(wwwAuth)
+        el('alert-payment').classList.add('visible')
+        el('credential-input').value = ''
         return
       }
 
@@ -490,65 +668,46 @@
     } catch (e) {
       showError('Network error: ' + e.message)
     } finally {
-      setLoading(false)
+      btn.disabled = false
+      btn.textContent = 'Buy Insurance'
     }
   }
 
-  function show402(wwwAuth) {
-    hideAlerts()
-    el('alert-payment').classList.add('visible')
-    el('credential-input').value = ''
-    // Update pool address in CLI command if we got it from auth header
-    if (poolAddress) {
-      el('pay-pool-address').textContent = poolAddress
-    }
-  }
-
-  function cancelPayment() {
-    pendingRequest = null
-    hideAlerts()
-    el('credential-input').value = ''
-  }
+  function cancelPayment() { pendingRequest = null; hideAlerts() }
 
   function retryWithCredential() {
     const cred = el('credential-input').value.trim()
-    if (!cred) {
-      alert('Please paste your payment credential first.')
-      return
-    }
+    if (!cred) { alert('Paste your payment credential first.'); return }
     submitInsure(cred)
+  }
+
+  function renderRows(rows) {
+    return rows.map(([k,v]) =>
+      '<div class="policy-row"><span class="key">' + k +
+      '</span><span class="val">' + v + '</span></div>'
+    ).join('')
   }
 
   function showPolicy(d) {
     hideAlerts()
-    const details = el('policy-details')
-    details.innerHTML = renderPolicyRows(d)
+    el('policy-details').innerHTML = renderRows([
+      ['Policy ID',         esc(d.policyId)],
+      ['Flight',            esc(d.flightNumber) + ' · ' + esc(d.date)],
+      ['Departs (UTC)',     esc(d.scheduledDeparture ?? '—')],
+      ['Premium',           esc(d.premium ?? '—') + ' pathUSD'],
+      ['Payout if delayed', esc(d.payoutAmount ?? '—') + ' pathUSD'],
+      ['Payout address',    esc(d.payoutAddress)],
+      ['Status',            '<span class="badge badge-active">active</span>'],
+    ])
     el('alert-success').classList.add('visible')
-    // Pre-fill policy checker
     if (d.policyId) el('policyId').value = d.policyId
   }
 
-  function renderPolicyRows(d) {
-    const rows = [
-      ['Policy ID',        esc(d.policyId)],
-      ['Flight',           esc(d.flightNumber) + ' · ' + esc(d.date)],
-      ['Departs (UTC)',    esc(d.scheduledDeparture ?? '—')],
-      ['Premium paid',     esc(d.premium ?? '—') + ' pathUSD'],
-      ['Payout if delayed',esc(d.payoutAmount ?? '—') + ' pathUSD'],
-      ['Payout address',   esc(d.payoutAddress)],
-      ['Status',           '<span class="badge badge-' + esc(d.status) + '">' + esc(d.status) + '</span>'],
-    ]
-    return rows.map(([k, v]) =>
-      '<div class="policy-row"><span class="key">' + k + '</span><span class="val">' + v + '</span></div>'
-    ).join('')
-  }
-
-  // ── GET /policy/:id ────────────────────────────────────────
+  // ── Check policy ──────────────────────────────────────────
   async function lookupPolicy() {
     const id = el('policyId').value.trim()
     el('policy-result').classList.remove('visible')
     el('policy-error').classList.remove('visible')
-
     if (!id) return
 
     try {
@@ -563,45 +722,40 @@
       if (!p) return
 
       const rows = [
-        ['Policy ID',        esc(p.id)],
-        ['Status',           '<span class="badge badge-' + esc(p.status) + '">' + esc(p.status) + '</span>'],
-        ['Flight',           esc(p.flightNumber) + ' · ' + esc(p.date)],
-        ['Departs (UTC)',    esc(p.scheduledDeparture ?? '—')],
-        ['Payout amount',    esc(p.payoutAmount) + ' pathUSD'],
-        ['Payout address',   esc(p.payoutAddress)],
+        ['Policy ID',     esc(p.id)],
+        ['Status',        '<span class="badge badge-' + esc(p.status) + '">' + esc(p.status) + '</span>'],
+        ['Flight',        esc(p.flightNumber) + ' · ' + esc(p.date)],
+        ['Departs (UTC)', esc(p.scheduledDeparture ?? '—')],
+        ['Payout amount', esc(p.payoutAmount) + ' pathUSD'],
+        ['Payout to',     esc(p.payoutAddress)],
       ]
       if (p.payoutTxHash) {
         rows.push(['Tx hash',
-          '<a href="' + explorerBase + '/tx/' + esc(p.payoutTxHash) + '" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all;">' + esc(p.payoutTxHash) + '</a>'
+          '<a href="' + explorerBase + '/tx/' + esc(p.payoutTxHash) +
+          '" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all;">' +
+          esc(p.payoutTxHash) + '</a>'
         ])
       }
-      if (p.lastFlightStatus) {
-        rows.push(['Last flight status', esc(p.lastFlightStatus)])
-      }
+      if (p.lastFlightStatus) rows.push(['Last status', esc(p.lastFlightStatus)])
 
-      el('policy-result').innerHTML =
-        '<h3>Policy Found</h3>' +
-        rows.map(([k, v]) =>
-          '<div class="policy-row"><span class="key">' + k + '</span><span class="val">' + v + '</span></div>'
-        ).join('')
+      el('policy-result').innerHTML = '<h3>Policy Found</h3>' + renderRows(rows)
       el('policy-result').classList.add('visible')
-
     } catch (e) {
       el('policy-error').innerHTML = '<h3>Error</h3><p>' + esc(e.message) + '</p>'
       el('policy-error').classList.add('visible')
     }
   }
 
-  // Allow Enter key in policy lookup
+  // ── Init ──────────────────────────────────────────────────
   el('policyId').addEventListener('keydown', e => { if (e.key === 'Enter') lookupPolicy() })
+  el('flightNumber').addEventListener('keydown', e => { if (e.key === 'Enter') lookupFlight() })
+  el('deposit-amount').addEventListener('input', updateDepositCmd)
 
-  // Set date min to today
-  const today = new Date().toISOString().slice(0, 10)
-  el('flightDate').setAttribute('min', today)
+  el('flightDate').setAttribute('min', new Date().toISOString().slice(0,10))
+  el('flightDate').value = new Date().toISOString().slice(0,10)
 
-  // Boot
   loadHealth()
+  setInterval(loadHealth, 30_000)
 </script>
-
 </body>
 </html>

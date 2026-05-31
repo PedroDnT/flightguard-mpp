@@ -163,6 +163,34 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
   })
 
   // ----------------------------------------------------------------
+  // GET /flight-lookup  — Proxy AeroDataBox flight search (keeps API key server-side)
+  // ----------------------------------------------------------------
+  app.get('/flight-lookup', async (c) => {
+    const flight = c.req.query('flight')?.trim().toUpperCase()
+    const date = c.req.query('date')?.trim()
+
+    if (!flight || !date) {
+      return c.json({ error: 'flight and date query params required' }, 400)
+    }
+    if (!/^[A-Z0-9]{2,8}$/i.test(flight)) {
+      return c.json({ error: 'Invalid flight number format' }, 400)
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return c.json({ error: 'date must be YYYY-MM-DD' }, 400)
+    }
+
+    try {
+      const info = await fetchFlightInfo(flight, date, config.rapidApiKey)
+      if (!info) return c.json({ error: `Flight ${flight} not found for ${date}` }, 404)
+      return c.json({ flight: info })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`[SERVER] Flight lookup error: ${msg}`)
+      return c.json({ error: 'Flight data unavailable' }, 503)
+    }
+  })
+
+  // ----------------------------------------------------------------
   // GET /policy/:id  — Check policy status
   // ----------------------------------------------------------------
   app.get('/policy/:id', async (c) => {
