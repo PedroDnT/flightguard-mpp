@@ -193,7 +193,9 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
         }
 
         console.log(`[SERVER] ✅ Policy issued via x402: ${policy.id}`)
-        return c.json(response, 201, { 'X-Payment-Response': 'settled' })
+        return c.json(response, 201, {
+          'X-Payment-Response': Buffer.from(JSON.stringify(settleResult)).toString('base64'),
+        })
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
         console.error(`[SERVER] x402 error: ${msg}`)
