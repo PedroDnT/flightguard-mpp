@@ -26,6 +26,12 @@ function checkRateLimit(ip: string): boolean {
   const now = Date.now()
   const entry = rateLimitMap.get(ip)
   if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    // Prune the whole map on window reset to prevent unbounded growth
+    if (rateLimitMap.size > 10_000) {
+      for (const [k, v] of rateLimitMap) {
+        if (now - v.windowStart > RATE_LIMIT_WINDOW_MS) rateLimitMap.delete(k)
+      }
+    }
     rateLimitMap.set(ip, { count: 1, windowStart: now })
     return true
   }
@@ -354,8 +360,14 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
   })
 
   // ----------------------------------------------------------------
-  // POST /demo/policy  — Create a synthetic policy (no MPP, no real flight)
+  // Demo routes — only registered when DEMO_MODE=true
   // ----------------------------------------------------------------
+  if (process.env.DEMO_MODE !== 'true') {
+    app.post('/demo/policy', (c) => c.json({ error: 'Demo mode not enabled' }, 404))
+    app.post('/demo/policy/:id/resolve', (c) => c.json({ error: 'Demo mode not enabled' }, 404))
+  } else {
+
+  // POST /demo/policy  — Create a synthetic policy (no MPP, no real flight)
   app.post('/demo/policy', async (c) => {
     // Rate limit — unauthenticated route that persists to the shared store
     // and feeds the checker (which calls the metered flight API)
@@ -408,6 +420,8 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
 
     return c.json({ policy: store.get(id) })
   })
+
+  } // end DEMO_MODE block
 
   // Serve the purchase UI from public/ — registered last so API routes take priority
   app.use('/*', serveStatic({ root: './public' }))

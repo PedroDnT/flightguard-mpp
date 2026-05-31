@@ -109,6 +109,7 @@ export class FlightChecker {
   private async checkPolicy(policyId: string): Promise<CheckResult | null> {
     const policy = store.get(policyId)
     if (!policy || policy.status !== 'active') return null
+    if (policy.isDemo) return null  // demo policies are resolved via /demo/policy/:id/resolve
 
     console.log(`[CHECKER] Checking policy ${policyId}`)
     console.log(`[CHECKER]   Flight: ${policy.flightNumber} on ${policy.date}`)
