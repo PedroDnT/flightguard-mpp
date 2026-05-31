@@ -181,6 +181,15 @@
       min-height: 70px; resize: vertical;
     }
 
+    /* ── Payment method tabs ─────────────────────────────────── */
+    .pay-tab {
+      flex: 1; padding: 7px 12px; font-size: .8rem; font-weight: 600;
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      background: var(--bg); color: var(--muted); transition: all .15s;
+    }
+    .pay-tab:hover { border-color: var(--accent); color: var(--accent); }
+    .pay-tab-active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
     /* ── Policy detail rows ──────────────────────────────────── */
     .policy-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: .83rem; border-bottom: 1px solid var(--border); }
     .policy-row:last-child { border-bottom: none; }
@@ -352,49 +361,96 @@
     <div class="card" id="step2-card" style="display:none;">
       <div class="card-title">Step 2 — Buy insurance</div>
 
-      <div class="field">
-        <label>Payout Wallet Address <span class="hint">receives payout if delayed</span></label>
-        <input type="text" id="payoutAddress" placeholder="0x…" autocomplete="off" />
-        <div class="field-error" id="err-addr">Valid EVM address required (0x + 40 hex chars)</div>
+      <!-- Payment method toggle -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button id="tab-mpp"  class="pay-tab pay-tab-active" onclick="setPayMethod('mpp')">Tempo MPP · pathUSD</button>
+        <button id="tab-x402" class="pay-tab"                onclick="setPayMethod('x402')">Base x402 · USDC</button>
       </div>
 
-      <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin:12px 0;font-size:.83rem;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="color:var(--muted);">Premium</span>
-          <strong id="buy-premium">1.00 pathUSD</strong>
+      <!-- ── MPP section ── -->
+      <div id="section-mpp">
+        <div class="field">
+          <label>Payout Wallet Address <span class="hint">receives payout if delayed</span></label>
+          <input type="text" id="payoutAddress" placeholder="0x…" autocomplete="off" />
+          <div class="field-error" id="err-addr">Valid EVM address required (0x + 40 hex chars)</div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="color:var(--muted);">Payout if delay ≥ <span id="buy-threshold">60</span> min</span>
-          <strong id="buy-payout" style="color:var(--success);">5.00 pathUSD</strong>
+
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin:12px 0;font-size:.83rem;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="color:var(--muted);">Premium</span>
+            <strong id="buy-premium">1.00 pathUSD</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="color:var(--muted);">Payout if delay ≥ <span id="buy-threshold">60</span> min</span>
+            <strong id="buy-payout" style="color:var(--success);">5.00 pathUSD</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--muted);">Network</span>
+            <strong>Tempo · pathUSD</strong>
+          </div>
         </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="color:var(--muted);">Payment method</span>
-          <strong>MPP / pathUSD</strong>
+
+        <button class="btn-success" id="btn-insure" onclick="submitInsure()">Buy Insurance</button>
+
+        <!-- 402 Payment Required -->
+        <div class="alert alert-warn" id="alert-payment">
+          <h3>💳 Payment Required</h3>
+          <p>Send <strong id="pay-amount">1.00 pathUSD</strong> to the pool using the Tempo CLI:</p>
+          <code id="pay-cli-cmd">—</code>
+          <label for="credential-input" style="margin-top:10px;display:block;color:#92400e;font-weight:600;">Paste your payment credential:</label>
+          <textarea id="credential-input" placeholder="Paste Authorization credential from Tempo wallet…"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn-secondary btn-sm" onclick="cancelPayment()">Cancel</button>
+            <button class="btn-primary btn-sm" style="flex:1;" onclick="retryWithCredential()">Complete Purchase →</button>
+          </div>
         </div>
       </div>
 
-      <button class="btn-success" id="btn-insure" onclick="submitInsure()">Buy Insurance</button>
+      <!-- ── x402 section ── -->
+      <div id="section-x402" style="display:none;">
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-bottom:14px;font-size:.83rem;line-height:1.55;">
+          <strong style="color:#1d4ed8;">Base x402 — for AI agents &amp; Base wallets</strong><br/>
+          Send <strong id="buy-premium-usdc">1.00 USDC</strong> on Base via the
+          <a href="https://docs.cdp.coinbase.com/mpc-wallet/docs/base-mcp" target="_blank" rel="noopener" style="color:#2563eb;">Base MCP</a>
+          or any x402-compatible wallet. The server verifies &amp; settles payment automatically.
+        </div>
 
-      <!-- 402 Payment Required -->
-      <div class="alert alert-warn" id="alert-payment">
-        <h3>💳 Payment Required</h3>
-        <p>Send <strong id="pay-amount">1.00 pathUSD</strong> to the pool using the Tempo CLI:</p>
-        <code id="pay-cli-cmd">—</code>
-        <label for="credential-input" style="margin-top:10px;display:block;color:#92400e;font-weight:600;">Paste your payment credential:</label>
-        <textarea id="credential-input" placeholder="Paste Authorization credential from Tempo wallet…"></textarea>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button class="btn-secondary btn-sm" onclick="cancelPayment()">Cancel</button>
-          <button class="btn-primary btn-sm" style="flex:1;" onclick="retryWithCredential()">Complete Purchase →</button>
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:.83rem;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="color:var(--muted);">Premium</span>
+            <strong id="buy-premium-x402">1.00 USDC</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="color:var(--muted);">Payout if delay ≥ <span id="buy-threshold-x402">60</span> min</span>
+            <strong id="buy-payout-x402" style="color:var(--success);">5.00 pathUSD</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--muted);">Network</span>
+            <strong id="x402-network-label">Base Sepolia · USDC</strong>
+          </div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:4px;">x402 Requirements Endpoint</label>
+          <div style="background:#1e293b;color:#e2e8f0;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:.78rem;word-break:break-all;" id="x402-req-cmd">POST /insure  with header: Prefer: payment=x402</div>
+          <button class="btn-secondary btn-sm" style="margin-top:6px;" onclick="copy(el('x402-req-cmd').textContent)">Copy</button>
+          <button class="btn-secondary btn-sm" style="margin-top:6px;margin-left:6px;" onclick="fetchX402Requirements()">Fetch Requirements JSON</button>
+        </div>
+
+        <div id="x402-req-display" style="display:none;margin-bottom:10px;">
+          <label style="display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:4px;">Payment Requirements (share with Base MCP agent)</label>
+          <pre id="x402-req-json" style="background:#1e293b;color:#86efac;border-radius:8px;padding:10px 12px;font-size:.74rem;overflow:auto;max-height:180px;"></pre>
+          <button class="btn-secondary btn-sm" style="margin-top:6px;" onclick="copy(el('x402-req-json').textContent)">Copy JSON</button>
         </div>
       </div>
 
-      <!-- Success -->
+      <!-- Success (shared) -->
       <div class="alert alert-success" id="alert-success">
         <h3>✅ Policy Active</h3>
         <div id="policy-details" style="margin-top:8px;"></div>
       </div>
 
-      <!-- Error -->
+      <!-- Error (shared) -->
       <div class="alert alert-danger" id="alert-error">
         <h3>❌ Error</h3>
         <p id="error-message"></p>
@@ -511,6 +567,12 @@
       el('buy-payout').textContent    = payoutVal
       el('buy-threshold').textContent = delay
 
+      const usdcPremium = premNum.toFixed(2) + ' USDC'
+      el('buy-premium-usdc').textContent  = usdcPremium
+      el('buy-premium-x402').textContent  = usdcPremium
+      el('buy-payout-x402').textContent   = payoutVal
+      el('buy-threshold-x402').textContent = delay
+
       el('pay-amount').textContent  = premium
       el('pay-cli-cmd').textContent =
         `tempo wallet transfer ${premNum.toFixed(2)} pathUSD ${poolAddress}`
@@ -605,6 +667,45 @@
 
     el('prev-delay').textContent = delay ? '+' + delay + ' min delay' : ''
     el('flight-preview').style.display = 'block'
+  }
+
+  // ── Payment method toggle ─────────────────────────────────
+  let payMethod = 'mpp'
+
+  function setPayMethod(m) {
+    payMethod = m
+    el('tab-mpp').classList.toggle('pay-tab-active', m === 'mpp')
+    el('tab-x402').classList.toggle('pay-tab-active', m === 'x402')
+    el('section-mpp').style.display  = m === 'mpp'  ? '' : 'none'
+    el('section-x402').style.display = m === 'x402' ? '' : 'none'
+    ;['alert-success','alert-error'].forEach(id => el(id).classList.remove('visible'))
+  }
+
+  async function fetchX402Requirements() {
+    const body = {
+      flightNumber: el('flightNumber').value.trim().toUpperCase(),
+      date:         el('flightDate').value,
+      payoutAddress: '0x0000000000000000000000000000000000000001',
+    }
+    try {
+      const r = await fetch('/insure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'payment=x402' },
+        body: JSON.stringify(body),
+      })
+      const d = await r.json()
+      if (r.status === 402 && d.accepts) {
+        el('x402-req-json').textContent = JSON.stringify(d.accepts[0], null, 2)
+        el('x402-req-display').style.display = ''
+        const net = d.accepts[0]?.network ?? ''
+        el('x402-network-label').textContent = net.includes('sepolia') ? 'Base Sepolia · USDC' : 'Base · USDC'
+      } else {
+        el('x402-req-json').textContent = JSON.stringify(d, null, 2)
+        el('x402-req-display').style.display = ''
+      }
+    } catch (e) {
+      alert('Error: ' + e.message)
+    }
   }
 
   // ── Buy insurance ─────────────────────────────────────────

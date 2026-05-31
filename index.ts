@@ -46,6 +46,9 @@ function loadConfig(): AppConfig {
     delayThresholdMin: Number(process.env.DELAY_THRESHOLD_MIN ?? '60'),
     checkIntervalMs: Number(process.env.CHECK_INTERVAL_MS ?? '300000'),
     rapidApiKey: process.env.RAPIDAPI_KEY!,
+    baseNetwork: process.env.BASE_NETWORK || undefined,
+    baseUsdcAddress: process.env.BASE_USDC_ADDRESS as `0x${string}` | undefined,
+    baseUrl: process.env.BASE_URL || undefined,
   }
 }
 

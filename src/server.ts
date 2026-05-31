@@ -10,6 +10,7 @@ import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Mppx, tempo } from 'mppx/server'
+import { useFacilitator } from 'x402/verify'
 import { store } from './store.js'
 import { fetchFlightInfo, getScheduledDepartureUtc } from './flight.js'
 import { PayoutEngine } from './payout.js'
@@ -49,15 +50,124 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
 
   // ----------------------------------------------------------------
   // POST /insure  — Buy a flight delay insurance policy
-  // Cost: config.premiumAmount pathUSD via MPP
+  // Cost: config.premiumAmount via MPP (pathUSD) or x402 (Base USDC)
   // ----------------------------------------------------------------
   app.post('/insure', bodyLimit({ maxSize: 1024 }), async (c) => {
     console.log(`[SERVER] POST /insure`)
 
-    // Gate with MPP payment
+    // ── x402 path (Base USDC) ───────────────────────────────────
+    const xPaymentHeader = c.req.header('x-payment')
+    const preferX402 = c.req.header('prefer')?.toLowerCase().includes('payment=x402')
+
+    if ((xPaymentHeader || preferX402) && config.baseNetwork && config.baseUsdcAddress) {
+      const premiumAtoms = String(Math.round(parseFloat(config.premiumAmount) * 1_000_000))
+      const resource = `${config.baseUrl ?? 'http://localhost:' + config.port}/insure` as `${string}://${string}`
+      const requirements = {
+        scheme: 'exact' as const,
+        network: config.baseNetwork as 'base-sepolia' | 'base',
+        maxAmountRequired: premiumAtoms,
+        resource,
+        description: `FlightGuard insurance — ${config.premiumAmount} USDC premium`,
+        mimeType: 'application/json',
+        payTo: config.poolAddress,
+        maxTimeoutSeconds: 300,
+        asset: config.baseUsdcAddress,
+      }
+
+      // No payment header yet → issue 402 challenge
+      if (!xPaymentHeader) {
+        console.log(`[SERVER] x402 402 — awaiting Base USDC payment`)
+        return c.json(
+          { x402Version: 1, accepts: [requirements], error: 'Payment Required' },
+          402,
+          { 'Content-Type': 'application/json' },
+        )
+      }
+
+      // Payment header present → verify then settle
+      try {
+        const payload = JSON.parse(Buffer.from(xPaymentHeader, 'base64').toString('utf8'))
+        const { verify: x402verify, settle: x402settle } = useFacilitator()
+        const verifyResult = await x402verify(payload, requirements)
+        if (!verifyResult.isValid) {
+          console.log(`[SERVER] x402 verify failed: ${verifyResult.invalidReason}`)
+          return c.json({ error: 'Payment verification failed', reason: verifyResult.invalidReason }, 402)
+        }
+        console.log(`[SERVER] x402 payment verified`)
+
+        // Rate limit (checked after payment verification to prevent probing)
+        const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown'
+        if (!checkRateLimit(ip)) {
+          return c.json({ error: 'Too many requests' }, 429)
+        }
+
+        let body: InsureRequest
+        try { body = await c.req.json<InsureRequest>() } catch {
+          return c.json({ error: 'Invalid JSON body' }, 400)
+        }
+        const { flightNumber, date, payoutAddress } = body
+        if (!flightNumber || !date || !payoutAddress)
+          return c.json({ error: 'Missing required fields: flightNumber, date, payoutAddress' }, 400)
+        if (!/^[A-Z0-9]{2,8}$/i.test(flightNumber))
+          return c.json({ error: 'Invalid flight number format (e.g. LA3251)' }, 400)
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
+          return c.json({ error: 'date must be YYYY-MM-DD' }, 400)
+        if (!/^0x[0-9a-fA-F]{40}$/.test(payoutAddress))
+          return c.json({ error: 'payoutAddress must be a valid EVM address' }, 400)
+
+        let flightInfo
+        try {
+          flightInfo = await fetchFlightInfo(flightNumber, date, config.rapidApiKey)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error(`[SERVER] Flight lookup failed: ${msg}`)
+          return c.json({ error: 'Flight data unavailable' }, 503)
+        }
+        if (!flightInfo)
+          return c.json({ error: `Flight ${flightNumber} not found for date ${date}` }, 404)
+
+        const scheduledDeparture = getScheduledDepartureUtc(flightInfo)
+        const premiumCents = BigInt(Math.round(parseFloat(config.premiumAmount) * 100))
+        const payoutAmount = (Number(premiumCents * BigInt(config.payoutMultiplier)) / 100).toFixed(2)
+
+        const policy = store.create({
+          req: { flightNumber, date, payoutAddress },
+          premiumAmount: config.premiumAmount,
+          payoutAmount,
+          scheduledDeparture,
+        })
+
+        // Settle after policy is created (non-blocking for policy creation)
+        x402settle(payload, requirements).catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error(`[SERVER] x402 settle error: ${msg}`)
+        })
+
+        const response: InsureResponse = {
+          policyId: policy.id,
+          flightNumber: policy.flightNumber,
+          date: policy.date,
+          scheduledDeparture: policy.scheduledDeparture,
+          premium: policy.premium,
+          payoutAmount: policy.payoutAmount,
+          payoutAddress: policy.payoutAddress,
+          status: policy.status,
+          message: `Policy active. Payout of ${payoutAmount} pathUSD fires automatically if departure delay exceeds ${config.delayThresholdMin} minutes.`,
+        }
+
+        console.log(`[SERVER] ✅ Policy issued via x402: ${policy.id}`)
+        return c.json(response, 201, { 'X-Payment-Response': 'settled' })
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error(`[SERVER] x402 error: ${msg}`)
+        return c.json({ error: 'Payment processing failed' }, 402)
+      }
+    }
+
+    // ── MPP path (Tempo pathUSD) ────────────────────────────────
     const r = await mppx.charge({ amount: config.premiumAmount })(c.req.raw)
     if (r.status === 402) {
-      console.log(`[SERVER] 402 — awaiting payment`)
+      console.log(`[SERVER] 402 — awaiting MPP payment`)
       return r.challenge
     }
 

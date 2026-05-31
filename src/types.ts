@@ -160,6 +160,11 @@ export interface AppConfig {
   // Alchemy integration (optional)
   alchemyApiKey?: string
   alchemyServiceUrl?: string  // MPP service endpoint — discover via: tempo wallet services --search alchemy
+
+  // Base / x402 payment (optional — enables USDC payments from AI agents & Base wallets)
+  baseNetwork?: string           // e.g. "base-sepolia" or "base"
+  baseUsdcAddress?: `0x${string}` // USDC contract on Base
+  baseUrl?: string               // Public URL of this server, used as x402 resource
 }
 
 // ------------------------------------------------------------

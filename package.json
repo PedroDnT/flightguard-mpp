@@ -22,7 +22,8 @@
     "hono": "^4.0.0",
     "mppx": "^0.4.5",
     "node-fetch": "^3.0.0",
-    "viem": "^2.0.0"
+    "viem": "^2.0.0",
+    "x402": "^1.2.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^7.0.0",
