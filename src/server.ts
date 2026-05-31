@@ -34,6 +34,42 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
+function clientIp(c: { req: { header: (k: string) => string | undefined } }): string {
+  return c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown'
+}
+
+// Validate insure request inputs. Returns an error string, or null if valid.
+// Shared by both the MPP and x402 payment paths so they enforce identical rules.
+function validateInsureInputs(body: Partial<InsureRequest>): string | null {
+  const { flightNumber, date, payoutAddress } = body
+  if (!flightNumber || !date || !payoutAddress) {
+    return 'Missing required fields: flightNumber, date, payoutAddress'
+  }
+  if (!/^[A-Z0-9]{2,8}$/i.test(flightNumber)) {
+    return 'Invalid flight number format (e.g. LA3251)'
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return 'date must be YYYY-MM-DD'
+  }
+  const parsedDate = new Date(date + 'T00:00:00Z')
+  if (
+    isNaN(parsedDate.getTime()) ||
+    parsedDate.getUTCMonth() + 1 !== parseInt(date.slice(5, 7), 10) ||
+    parsedDate.getUTCDate() !== parseInt(date.slice(8, 10), 10)
+  ) {
+    return 'date is not a valid calendar date'
+  }
+  const todayUtc = new Date()
+  todayUtc.setUTCHours(0, 0, 0, 0)
+  if (parsedDate < todayUtc) {
+    return 'date must not be in the past'
+  }
+  if (!/^0x[0-9a-fA-F]{40}$/.test(payoutAddress)) {
+    return 'payoutAddress must be a valid EVM address'
+  }
+  return null
+}
+
 export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = null): Hono {
   const app = new Hono()
   const payoutEngine = new PayoutEngine(config)
@@ -96,8 +132,7 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
         console.log(`[SERVER] x402 payment verified`)
 
         // Rate limit (checked after payment verification to prevent probing)
-        const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown'
-        if (!checkRateLimit(ip)) {
+        if (!checkRateLimit(clientIp(c))) {
           return c.json({ error: 'Too many requests' }, 429)
         }
 
@@ -105,15 +140,9 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
         try { body = await c.req.json<InsureRequest>() } catch {
           return c.json({ error: 'Invalid JSON body' }, 400)
         }
+        const validationError = validateInsureInputs(body)
+        if (validationError) return c.json({ error: validationError }, 400)
         const { flightNumber, date, payoutAddress } = body
-        if (!flightNumber || !date || !payoutAddress)
-          return c.json({ error: 'Missing required fields: flightNumber, date, payoutAddress' }, 400)
-        if (!/^[A-Z0-9]{2,8}$/i.test(flightNumber))
-          return c.json({ error: 'Invalid flight number format (e.g. LA3251)' }, 400)
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
-          return c.json({ error: 'date must be YYYY-MM-DD' }, 400)
-        if (!/^0x[0-9a-fA-F]{40}$/.test(payoutAddress))
-          return c.json({ error: 'payoutAddress must be a valid EVM address' }, 400)
 
         let flightInfo
         try {
@@ -174,8 +203,7 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
     }
 
     // Rate limit
-    const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown'
-    if (!checkRateLimit(ip)) {
+    if (!checkRateLimit(clientIp(c))) {
       return c.json({ error: 'Too many requests' }, 429)
     }
 
@@ -187,37 +215,11 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
       return c.json({ error: 'Invalid JSON body' }, 400)
     }
 
-    const { flightNumber, date, payoutAddress } = body
-
     // Validate inputs
-    if (!flightNumber || !date || !payoutAddress) {
-      return c.json(
-        { error: 'Missing required fields: flightNumber, date, payoutAddress' },
-        400,
-      )
-    }
-    if (!/^[A-Z0-9]{2,8}$/i.test(flightNumber)) {
-      return c.json({ error: 'Invalid flight number format (e.g. LA3251)' }, 400)
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return c.json({ error: 'date must be YYYY-MM-DD' }, 400)
-    }
-    const parsedDate = new Date(date + 'T00:00:00Z')
-    if (
-      isNaN(parsedDate.getTime()) ||
-      parsedDate.getUTCMonth() + 1 !== parseInt(date.slice(5, 7), 10) ||
-      parsedDate.getUTCDate() !== parseInt(date.slice(8, 10), 10)
-    ) {
-      return c.json({ error: 'date is not a valid calendar date' }, 400)
-    }
-    const todayUtc = new Date()
-    todayUtc.setUTCHours(0, 0, 0, 0)
-    if (parsedDate < todayUtc) {
-      return c.json({ error: 'date must not be in the past' }, 400)
-    }
-    if (!/^0x[0-9a-fA-F]{40}$/.test(payoutAddress)) {
-      return c.json({ error: 'payoutAddress must be a valid EVM address' }, 400)
-    }
+    const validationError = validateInsureInputs(body)
+    if (validationError) return c.json({ error: validationError }, 400)
+
+    const { flightNumber, date, payoutAddress } = body
 
     console.log(`[SERVER] Insuring flight ${flightNumber} on ${date} → ${payoutAddress}`)
 
@@ -278,6 +280,11 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
   // GET /flight-lookup  — Proxy AeroDataBox flight search (keeps API key server-side)
   // ----------------------------------------------------------------
   app.get('/flight-lookup', async (c) => {
+    // Rate limit — this route proxies the metered AeroDataBox/RapidAPI quota
+    if (!checkRateLimit(clientIp(c))) {
+      return c.json({ error: 'Too many requests' }, 429)
+    }
+
     const flight = c.req.query('flight')?.trim().toUpperCase()
     const date = c.req.query('date')?.trim()
 
