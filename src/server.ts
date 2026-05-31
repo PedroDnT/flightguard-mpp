@@ -357,6 +357,12 @@ export function buildServer(config: AppConfig, alchemy: AlchemyClient | null = n
   // POST /demo/policy  — Create a synthetic policy (no MPP, no real flight)
   // ----------------------------------------------------------------
   app.post('/demo/policy', async (c) => {
+    // Rate limit — unauthenticated route that persists to the shared store
+    // and feeds the checker (which calls the metered flight API)
+    if (!checkRateLimit(clientIp(c))) {
+      return c.json({ error: 'Too many requests' }, 429)
+    }
+
     const departureTime = new Date(Date.now() + 2 * 60 * 1000) // departs in 2 min
     const date = departureTime.toISOString().slice(0, 10)
     const payoutAmount = (parseFloat(config.premiumAmount) * config.payoutMultiplier).toFixed(2)
