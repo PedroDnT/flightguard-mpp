@@ -80,9 +80,3 @@ This skill teaches you the core development patterns and conventions found in th
   });
   ```
 
-## Commands
-| Command      | Purpose                                         |
-|--------------|-------------------------------------------------|
-| /contribute  | Start the code contribution workflow            |
-| /test        | Run or write tests for the codebase             |
-```
